@@ -1,77 +1,69 @@
-import mongoose, { Document, Schema } from 'mongoose';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { config } from '../config/env';
+// models/User.ts - User Model Schema
+import mongoose, { Schema, Document } from "mongoose";
 
-export interface IUser extends Document {
+// Interface defines the shape of a User document
+interface IUser extends Document {
   email: string;
   password: string;
-  name: string;
-  role: 'client' | 'freelancer';
-  profile: {
-    skills: string[];
-    bio: string;
-    hourlyRate?: number;
-    portfolio?: string[];
-  };
-  createdAt: Date;
-  matchPassword(enteredPassword: string): Promise<boolean>;
-  getSignedJwtToken(): string;
+  firstName: string;
+  lastName: string;
+  role: "client" | "freelancer"; // Union type - can only be these two values
+  skills: string[]; // Array of strings
+  hourlyRate?: number; // Optional field (? means optional)
+  joinDate: Date;
+  status: "active" | "inactive";
 }
 
-const UserSchema = new Schema({
-  email: {
-    type: String,
-    required: [true, 'Please add an email'],
-    unique: true,
-    match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please add a valid email']
+// Schema definition
+const UserSchema = new Schema(
+  {
+    email: {
+      type: String,
+      required: true, // Field must be provided
+      unique: true, // Must be unique in database
+      lowercase: true, // Converts email to lowercase
+    },
+    password: {
+      type: String,
+      required: true,
+      minlength: 6,
+    },
+    firstName: {
+      type: String,
+      required: true,
+      trim: true, // Removes whitespace
+    },
+    lastName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    role: {
+      type: String,
+      enum: ["client", "freelancer"], // Only these values allowed
+      required: true,
+    },
+    skills: [
+      {
+        type: String,
+      },
+    ],
+    hourlyRate: {
+      type: Number,
+      default: 0,
+    },
+    joinDate: {
+      type: Date,
+      default: Date.now,
+    },
+    status: {
+      type: String,
+      enum: ["active", "inactive"],
+      default: "active",
+    },
   },
-  password: {
-    type: String,
-    required: [true, 'Please add a password'],
-    minlength: 6,
-    select: false
-  },
-  name: {
-    type: String,
-    required: [true, 'Please add a name']
-  },
-  role: {
-    type: String,
-    enum: ['client', 'freelancer'],
-    required: true
-  },
-  profile: {
-    skills: [String],
-    bio: String,
-    hourlyRate: Number,
-    portfolio: [String]
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
+  {
+    timestamps: true, // Automatically add createdAt and updatedAt
   }
-});
-
-// Encrypt password using bcrypt
-UserSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) {
-    next();
-  }
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-});
-
-// Sign JWT and return
-UserSchema.methods.getSignedJwtToken = function() {
-  return jwt.sign({ id: this._id }, config.jwtSecret, {
-    expiresIn: config.jwtExpire
-  });
-};
-
-// Match user entered password to hashed password in database
-UserSchema.methods.matchPassword = async function(enteredPassword: string) {
-  return await bcrypt.compare(enteredPassword, this.password);
-};
-
-export const User = mongoose.model<IUser>('User', UserSchema);
+);
+export const User = mongoose.model<IUser>("User", UserSchema);
