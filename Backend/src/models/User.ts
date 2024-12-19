@@ -1,17 +1,29 @@
 // models/User.ts - User Model Schema
 import mongoose, { Schema, Document } from "mongoose";
 
-// Interface defines the shape of a User document
-interface IUser extends Document {
+// Interface for User document with optional password
+export interface IUser extends Document {
+  email: string;
+  password?: string; // Make password optional for response objects
+  firstName: string;
+  lastName: string;
+  role: "client" | "freelancer";
+  skills: string[];
+  hourlyRate?: number;
+  joinDate: Date;
+  status: "active" | "inactive";
+}
+
+// Interface for creating a new user (password required)
+export interface IUserInput {
   email: string;
   password: string;
   firstName: string;
   lastName: string;
-  role: "client" | "freelancer"; // Union type - can only be these two values
-  skills: string[]; // Array of strings
-  hourlyRate?: number; // Optional field (? means optional)
-  joinDate: Date;
-  status: "active" | "inactive";
+  role: "client" | "freelancer";
+  skills?: string[];
+  hourlyRate?: number;
+  status?: "active" | "inactive";
 }
 
 // Schema definition
