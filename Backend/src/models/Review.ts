@@ -1,5 +1,5 @@
 // src/models/Review.ts
-import mongoose, { Schema, Document, Types } from 'mongoose';
+import mongoose, { Schema, Document, Types, Model } from 'mongoose';
 import { IUser } from './User';
 import { IProject } from './Project';
 
@@ -26,6 +26,24 @@ export interface IReview extends Document {
   response?: string;  // Allows reviewee to respond to the review
   createdAt: Date;
   updatedAt: Date;
+}
+
+// Interface for Review statistics
+interface IReviewStats {
+  _id: null;
+  averageRating: number;
+  totalReviews: number;
+  averageMetrics: {
+    communication: number;
+    quality: number;
+    expertise: number;
+    professionalism: number;
+  };
+}
+
+// Interface for Review model static methods
+interface IReviewModel extends Model<IReview> {
+  calculateAverageRating(userId: string): Promise<IReviewStats | null>;
 }
 
 // Interface for creating a new review
@@ -141,7 +159,10 @@ ReviewSchema.index({ reviewee: 1, type: 1 });
 ReviewSchema.index({ project: 1, type: 1 });
 
 // Methods to calculate average rating
-ReviewSchema.statics.calculateAverageRating = async function(userId: string) {
+ReviewSchema.statics.calculateAverageRating = async function(
+  this: Model<IReview>,
+  userId: string
+): Promise<IReviewStats | null> {
   const stats = await this.aggregate([
     {
       $match: { reviewee: new mongoose.Types.ObjectId(userId) }
@@ -210,4 +231,4 @@ ReviewSchema.post('save', async function() {
   }
 });
 
-export const Review = mongoose.model<IReview>('Review', ReviewSchema);
+export const Review = mongoose.model<IReview, IReviewModel>('Review', ReviewSchema);
