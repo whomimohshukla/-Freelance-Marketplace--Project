@@ -3,10 +3,24 @@ import { Review, IReview, IReviewInput } from "../models/Review";
 import { Project } from "../models/Project";
 import { ErrorResponse } from "../utils/errorResponse";
 import { IUser } from "../models/User";
+import mongoose from "mongoose";
 
 // Extend Request type to include user
 interface AuthRequest extends Request {
   user?: IUser & { _id: string };
+}
+
+// Interface for Review statistics
+interface IReviewStats {
+  _id: null;
+  averageRating: number;
+  totalReviews: number;
+  averageMetrics: {
+    communication: number;
+    quality: number;
+    expertise: number;
+    professionalism: number;
+  };
 }
 
 // @desc    Create a new review
@@ -307,10 +321,10 @@ export const deleteReview = async (
     }
 
     // Check if user is review owner or admin
-    if (
-      review.reviewer.toString() !== req.user?._id.toString() &&
-      req.user?.role !== "admin"
-    ) {
+    const isReviewOwner = review.reviewer.toString() === req.user?._id.toString();
+    const isAdmin = req.user?.role === "admin";
+
+    if (!isReviewOwner && !isAdmin) {
       return next(
         new ErrorResponse("Not authorized to delete this review", 403)
       );
