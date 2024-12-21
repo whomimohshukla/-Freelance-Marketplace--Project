@@ -153,9 +153,47 @@ const sendLoginNotificationEmail = async (email: string, firstName: string): Pro
     return await sendEmail({ to: email, subject, html });
 };
 
+// Send password reset email
+const sendPasswordResetEmail = async (email: string, resetToken: string): Promise<boolean> => {
+    // Use environment variable for client URL or fallback to localhost
+    const baseUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+    const resetUrl = `${baseUrl}/auth/reset-password?token=${resetToken}`;
+    
+    const html = `
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
+            <h2 style="color: #333; text-align: center;">Password Reset Request</h2>
+            <p>You have requested to reset your password. Please click the button below to set a new password:</p>
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="${resetUrl}" 
+                   style="background-color: #4CAF50; color: white; padding: 14px 28px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                    Reset Password
+                </a>
+            </div>
+            <p style="color: #666;">This link will expire in 1 hour for security reasons.</p>
+            <p style="color: #666;">If you didn't request this, please ignore this email. Your password will remain unchanged.</p>
+            <div style="margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-radius: 5px;">
+                <p style="margin: 0; color: #666;">Or copy and paste this URL into your browser:</p>
+                <p style="word-break: break-all; margin: 10px 0 0 0; color: #007bff;">${resetUrl}</p>
+            </div>
+            <hr style="border: 1px solid #eee; margin: 20px 0;">
+            <p style="color: #666; font-size: 12px; text-align: center;">
+                For security reasons, this password reset link will expire in 1 hour.
+                If you need assistance, please contact our support team.
+            </p>
+        </div>
+    `;
+
+    return await sendEmail({
+        to: email,
+        subject: 'Reset Your Password - Action Required',
+        html
+    });
+};
+
 export const emailService = {
     sendEmail,
     sendOTPEmail,
     sendWelcomeEmail,
-    sendLoginNotificationEmail
+    sendLoginNotificationEmail,
+    sendPasswordResetEmail
 };
