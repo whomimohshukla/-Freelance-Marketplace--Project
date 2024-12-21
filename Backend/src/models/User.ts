@@ -14,6 +14,14 @@ export interface IUser extends Document {
   status: "active" | "inactive";
 }
 
+// Interface for authentication response
+export interface IAuthResponse {
+  user: Omit<IUser, 'password'>;
+  token: string;
+  success: boolean;
+  message: string;
+}
+
 // Interface for creating a new user (password required)
 export interface IUserInput {
   email: string;
