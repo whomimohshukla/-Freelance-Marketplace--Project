@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from "express";
-import { User, IUser, IUserInput } from "../models/User";
+import { Request, Response, NextFunction, RequestHandler } from "express";
+import { User, IUser, IUserInput, IAuthResponse } from "../models/User";
 import { OTP } from "../models/OTP";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -50,11 +50,7 @@ const sendOTP = async (
 };
 
 // Verify OTP and complete signup
-const signup = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
+const signup = async (req: Request, res: Response) => {
   try {
     const {
       email,
@@ -122,22 +118,94 @@ const signup = async (
       user: userWithoutPassword,
     });
   } catch (error) {
-    next(error);
+    res.status(400).json({
+      message: "Failed to create user",
+    });
   }
 };
 
-// login controller functionality
-
-const login = async (req: Request, res: Response, next: NextFunction) => {
+// Resend OTP
+const resendOTP = async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
+    const { email } = req.body;
 
-    // check the existance of the email and password fields
-    if (!email || !password) {
-      return res.status(400).json({ message: "Email and password required.." });
+    // Validate email
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required",
+      });
     }
-    // find the user by email if does not exist
 
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid email address",
+      });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "User already exists",
+      });
+    }
+
+    // Generate new OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    console.log("Resended OTP:", otp);
+    // Delete any existing OTP and save new one
+    await OTP.findOneAndDelete({ email });
+    await OTP.create({ email, otp });
+
+    // Send OTP via email
+    const emailSent = await emailService.sendOTPEmail(email, otp);
+
+    if (!emailSent) {
+      return res.status(500).json({
+        success: false,
+        message: "Failed to send OTP email",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "OTP resent successfully",
+    });
+  } catch (error) {
+    console.error("Error in resendOTP:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to resend OTP",
+      // error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+// Define types for request bodies
+interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+// login controller functionality
+const login = async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body as LoginRequest;
+
+    // Input validation
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide both email and password",
+      });
+    }
+
+    // find the user by email if does not exist
     const user = await User.findOne({ email }).select("+password");
     if (!user || !user.password) {
       res.status(404).json({ message: "Invalid credentials" });
@@ -156,27 +224,35 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
       email: user.email,
       role: user.role,
     };
-    console.log(user.role);
+
     // generate the token
     const token = jwt.sign(payload, config.jwtSecret, {
       expiresIn: config.jwtExpire,
     });
 
-    user.token = token;
-    user.password = undefined;
+    // Create response without password
+    const userResponse = user.toObject();
+    delete userResponse.password;
+
+    const response: IAuthResponse = {
+      message: "User logged in successfully",
+      success: true,
+      token,
+      user: userResponse,
+    };
+
+    // Send login notification email
+    await emailService.sendLoginNotificationEmail(user.email, user.firstName);
 
     res
       .cookie("token", token, {
         expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+        httpOnly: true, // Prevents JavaScript access to the cookie
+        secure: process.env.NODE_ENV === "production", // Only send cookie over HTTPS in production
+        sameSite: "strict", // Protect against CSRF
       })
       .status(200)
-      .json({
-        message: "User logged in successfully",
-        success: true,
-        token,
-        user,
-      });
-    console.log(user);
+      .json(response);
   } catch (error) {
     res.status(500).json({ message: "error while logging in", error: error });
   }
@@ -184,7 +260,8 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
 
 // Export the controller functions
 export const userController = {
-  sendOTP,
-  signup,
-  login,
+  sendOTP: sendOTP as RequestHandler,
+  resendOTP: resendOTP as RequestHandler,
+  signup: signup as RequestHandler,
+  login: login as RequestHandler,
 };
