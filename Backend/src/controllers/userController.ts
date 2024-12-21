@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { emailService } from "../utils/emailService";
 import { config } from "../config/env";
+import { ErrorResponse } from "../utils/errorResponse";
 
 // Generate and send OTP
 const sendOTP = async (
@@ -220,7 +221,7 @@ const login = async (req: Request, res: Response) => {
 
     // if everything is valid return the user
     const payload = {
-      _id: user._id,
+      id: user._id,
       email: user.email,
       role: user.role,
     };
@@ -247,9 +248,9 @@ const login = async (req: Request, res: Response) => {
     res
       .cookie("token", token, {
         expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-        httpOnly: true, // Prevents JavaScript access to the cookie
-        secure: process.env.NODE_ENV === "production", // Only send cookie over HTTPS in production
-        sameSite: "strict", // Protect against CSRF
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
       })
       .status(200)
       .json(response);
@@ -266,7 +267,18 @@ export const getMe = async (
   next: NextFunction
 ) => {
   try {
-    const user = await User.findById(req.user?._id);
+    // User should already be available from auth middleware
+    if (!req.user) {
+      return next(new ErrorResponse("User not found", 404));
+    }
+
+    // Get fresh user data with selected fields
+    const user = await User.findById(req.user._id).select("-password");
+
+    if (!user) {
+      return next(new ErrorResponse("User not found", 404));
+    }
+
     res.status(200).json({
       success: true,
       data: user,
@@ -276,13 +288,31 @@ export const getMe = async (
   }
 };
 
+interface UpdateProfileFields {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  skills?: string[];
+  hourlyRate?: number;
+  bio?: string;
+  location?: string;
+  socialLinks?: {
+    linkedin?: string;
+    github?: string;
+    portfolio?: string;
+  };
+  portfolio?: string[];
+  profileImage?: string;
+  [key: string]: any; // Index signature
+}
+
 export const updateProfile = async (
   req: Request & { user?: IUser },
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const fieldsToUpdate = {
+    const fieldsToUpdate: UpdateProfileFields = {
       firstName: req.body.firstName,
       lastName: req.body.lastName,
       email: req.body.email,
@@ -291,12 +321,30 @@ export const updateProfile = async (
       bio: req.body.bio,
       location: req.body.location,
       socialLinks: req.body.socialLinks,
+      portfolio: req.body.portfolio,
+      profileImage: req.body.profileImage,
     };
 
-    const user = await User.findByIdAndUpdate(req.user?._id, fieldsToUpdate, {
-      new: true,
-      runValidators: true,
+    // Remove undefined fields
+    Object.keys(fieldsToUpdate).forEach((key) => {
+      if (fieldsToUpdate[key] === undefined) {
+        delete fieldsToUpdate[key];
+      }
     });
+
+    const user = await User.findByIdAndUpdate(
+      req.user?._id,
+      { $set: fieldsToUpdate },
+      {
+        new: true,
+        runValidators: true,
+        select: "-password",
+      }
+    );
+
+    if (!user) {
+      return next(new ErrorResponse("User not found", 404));
+    }
 
     res.status(200).json({
       success: true,
@@ -307,73 +355,158 @@ export const updateProfile = async (
   }
 };
 
+// @desc    Forgot password
+// @route   POST /api/users/forgot-password
+// @access  Public
+export const forgotPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { email } = req.body;
 
+    if (!email) {
+      return next(new ErrorResponse("Please provide an email", 400));
+    }
 
-// // @desc    Upload profile image
-// // @route   PUT /api/users/profile/image
-// // @access  Private
-// export const uploadProfileImage = async (
-//   req: Request & { user?: IUser; files?: any },
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   try {
-//     if (!req.files) {
-//       return next(new ErrorResponse("Please upload a file", 400));
-//     }
+    // Find user by email
+    const user = await User.findOne({ email });
 
-//     const file = req.files.file;
+    if (!user) {
+      return next(new ErrorResponse("No user found with this email", 404));
+    }
 
-//     // Check file type
-//     if (!file.mimetype.startsWith("image")) {
-//       return next(new ErrorResponse("Please upload an image file", 400));
-//     }
+    // Generate reset token
+    const resetToken = jwt.sign({ id: user._id }, config.jwtSecret, {
+      expiresIn: "1h",
+    });
 
-//     // Upload to S3 or your preferred storage
-//     const imageUrl = await uploadToS3(file);
+    // Send reset email
+    const emailSent = await emailService.sendPasswordResetEmail(
+      email,
+      resetToken
+    );
 
-//     // Update user profile with image URL
-//     const user = await User.findByIdAndUpdate(
-//       req.user?._id,
-//       { profileImage: imageUrl },
-//       { new: true }
-//     );
+    if (!emailSent) {
+      return next(new ErrorResponse("Email could not be sent", 500));
+    }
 
-//     res.status(200).json({
-//       success: true,
-//       data: user,
-//     });
-//   } catch (error) {
-//     next(error);
-//   }
-// };
-// 
+    res.status(200).json({
+      success: true,
+      message: "Password reset link sent to email",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
-// export const updatePassword = async (
-//   req: Request & { user?: IUser },
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   try {
-//     const user = await User.findById(req.user?._id).select('+password');
+// @desc    Reset password
+// @route   POST /api/users/reset-password
+// @access  Public
+export const resetPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { token } = req.query;
+    const { password } = req.body;
 
-//     // Check current password
-//     const isMatch = await user?.matchPassword(req.body.currentPassword);
-//     if (!isMatch) {
-//       return next(new ErrorResponse('Current password is incorrect', 401));
-//     }
+    console.log({
+      token,
+      password,
+    });
 
-//     // Update password
-//     if (user) {
-//       user.password = req.body.newPassword;
-//       await user.save();
-//     }
+    if (!token || !password) {
+      return next(
+        new ErrorResponse("Please provide both token and new password", 400)
+      );
+    }
 
-//     sendTokenResponse(user as IUser, 200, res);
-//   } catch (error) {
-//     next(error);
-//   }
-// };
+    // Verify token
+    let decoded;
+    try {
+      decoded = jwt.verify(token as string, config.jwtSecret) as { id: string };
+    } catch (error) {
+      return next(new ErrorResponse("Invalid or expired reset token", 400));
+    }
+
+    // Find user
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      return next(new ErrorResponse("User not found", 404));
+    }
+
+    // Validate password
+    if (password.length < 6) {
+      return next(
+        new ErrorResponse("Password must be at least 6 characters", 400)
+      );
+    }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(password, salt);
+    await user.save();
+
+    // Send success response
+    res.status(200).json({
+      success: true,
+      message: "Password has been reset successfully",
+    });
+
+    // Send password change notification email
+    await emailService.sendEmail({
+      to: user.email,
+      subject: "Security Alert: Password Changed Successfully",
+      html: `
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif; background-color: #f9f9f9; border-radius: 10px;">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h2 style="color: #2c3e50; margin: 0;">Password Changed Successfully</h2>
+                <p style="color: #7f8c8d; margin-top: 5px;">Security Update for Your Account</p>
+            </div>
+            
+            <div style="background-color: #ffffff; padding: 20px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <p style="color: #34495e; margin-bottom: 15px;">Hello ${
+                  user.firstName
+                },</p>
+                
+                <p style="color: #34495e; line-height: 1.6;">The password for your account was successfully changed on ${new Date().toLocaleString()}.</p>
+                
+                <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                    <p style="color: #e74c3c; margin: 0;">
+                        <strong>⚠️ If you didn't make this change:</strong>
+                    </p>
+                    <ul style="color: #34495e; margin: 10px 0;">
+                        <li>Please contact our support team immediately</li>
+                        <li>Review your account for any unauthorized changes</li>
+                        <li>Consider enabling two-factor authentication</li>
+                    </ul>
+                </div>
+
+                <p style="color: #34495e; margin-top: 20px;">For security reasons, you may want to:</p>
+                <ul style="color: #34495e;">
+                    <li>Review your recent account activity</li>
+                    <li>Update passwords on other accounts if they were similar</li>
+                    <li>Ensure your email account is secure</li>
+                </ul>
+            </div>
+            
+            <div style="margin-top: 30px; text-align: center; color: #7f8c8d; font-size: 12px;">
+                <p>This is an automated security alert from SkillBridge.</p>
+                <p>If you need assistance, please contact our support team.</p>
+                <p style="margin-top: 15px;">${new Date().getFullYear()} SkillBridge. All rights reserved.</p>
+            </div>
+        </div>
+      `,
+    });
+
+    // Send password change notification email
+  } catch (error) {
+    next(error);
+  }
+};
 
 // Export the controller functions
 export const userController = {
@@ -381,9 +514,8 @@ export const userController = {
   resendOTP: resendOTP as RequestHandler,
   signup: signup as RequestHandler,
   login: login as RequestHandler,
-  // forgotPassword: forgotPassword as RequestHandler,
-  // resetPassword: resetPassword as RequestHandler,
+  forgotPassword: forgotPassword as RequestHandler,
+  resetPassword: resetPassword as RequestHandler,
   updateProfile: updateProfile as RequestHandler,
-  // updatePassword: updatePassword as RequestHandler,
   getMe: getMe as RequestHandler,
 };
