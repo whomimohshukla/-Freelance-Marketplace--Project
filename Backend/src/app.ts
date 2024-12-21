@@ -10,6 +10,7 @@ import { errorHandler } from "./middleware/error";
 // import authRoutes from './routes/auth.routes';
 // import projectRoutes from './routes/project.routes';
 import userRoutes from "./routes/userRoutes";
+import projectRoutes from "./routes/projectRoutes";
 
 const app: Application = express();
 
@@ -35,8 +36,10 @@ if (config.nodeEnv === "development") {
 
 // // Mount routes
 // app.use('/api/v1/auth', authRoutes);
-// app.use('/api/v1/projects', projectRoutes);
+
 app.use("/api/v1/users", userRoutes);
+// app.use("/api/project", project);
+app.use('/api/v1/projects', projectRoutes);
 
 // Error handling
 app.use(errorHandler);
