@@ -1,5 +1,6 @@
 // models/User.ts - User Model Schema
 import mongoose, { Schema, Document, Types } from "mongoose";
+import crypto from "crypto";
 
 // Interface for User document with optional password
 export interface IUser extends Document {
@@ -25,6 +26,9 @@ export interface IUser extends Document {
     github?: string;
     portfolio?: string;
   };
+  resetPasswordToken?: string;
+  resetPasswordExpire?: Date;
+  generateResetPasswordToken(): string;
 }
 
 // Interface for authentication response
@@ -135,6 +139,8 @@ const UserSchema = new Schema(
       github: String,
       portfolio: String,
     },
+    resetPasswordToken: String,
+    resetPasswordExpire: Date,
     reviews: [
       {
         type: Schema.Types.ObjectId,
@@ -158,4 +164,22 @@ const UserSchema = new Schema(
     timestamps: true, // Automatically add createdAt and updatedAt
   }
 );
+
+// Generate and hash password token
+UserSchema.methods.generateResetPasswordToken = function(): string {
+  // Generate token
+  const resetToken = crypto.randomBytes(20).toString('hex');
+
+  // Hash token and set to resetPasswordToken field
+  this.resetPasswordToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+
+  // Set expire
+  this.resetPasswordExpire = new Date(Date.now() + 3600000); // 1 hour
+
+  return resetToken;
+};
+
 export const User = mongoose.model<IUser>("User", UserSchema);
