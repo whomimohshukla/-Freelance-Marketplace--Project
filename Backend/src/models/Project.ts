@@ -1,90 +1,129 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Schema, Document, Types } from "mongoose";
+import { IUser } from "./User";
 
+// Interface for Project document
 export interface IProject extends Document {
   title: string;
   description: string;
-  client: mongoose.Types.ObjectId;
-  budget: {
-    min: number;
-    max: number;
-    type: 'fixed' | 'hourly';
-  };
+  client: Types.ObjectId | IUser;
   category: string;
   skills: string[];
-  status: 'open' | 'in-progress' | 'completed' | 'cancelled';
+  budget: {
+    minimum: number;
+    maximum: number;
+    type: "fixed" | "hourly";
+  };
   deadline?: Date;
+  status: "open" | "in-progress" | "completed" | "cancelled";
   attachments?: string[];
-  proposals: mongoose.Types.ObjectId[];
-  freelancer?: mongoose.Types.ObjectId;
-  createdAt: Date;
+  assignedFreelancer?: Types.ObjectId | IUser;
+  visibility: "public" | "private";
+  complexity: "beginner" | "intermediate" | "expert";
+  estimatedDuration: string;
 }
 
-const ProjectSchema = new Schema({
-  title: {
-    type: String,
-    required: [true, 'Please add a title'],
-    trim: true,
-    maxlength: [100, 'Title cannot be more than 100 characters']
-  },
-  description: {
-    type: String,
-    required: [true, 'Please add a description'],
-    maxlength: [5000, 'Description cannot be more than 5000 characters']
-  },
-  client: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
+// Interface for creating a new project
+export interface IProjectInput {
+  title: string;
+  description: string;
+  category: string;
+  skills: string[];
   budget: {
-    min: {
-      type: Number,
-      required: [true, 'Please add a minimum budget']
-    },
-    max: {
-      type: Number,
-      required: [true, 'Please add a maximum budget']
-    },
-    type: {
+    minimum: number;
+    maximum: number;
+    type: "fixed" | "hourly";
+  };
+  deadline?: Date;
+  visibility: "public" | "private";
+  complexity: "beginner" | "intermediate" | "expert";
+  estimatedDuration: string;
+  attachments?: string[];
+}
+
+// Schema definition
+const ProjectSchema = new Schema(
+  {
+    title: {
       type: String,
-      enum: ['fixed', 'hourly'],
-      required: true
-    }
+      required: true,
+      trim: true,
+    },
+    description: {
+      type: String,
+      required: true,
+    },
+    client: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    category: {
+      type: String,
+      required: true,
+    },
+    skills: [
+      {
+        type: String,
+        required: true,
+      },
+    ],
+    budget: {
+      minimum: {
+        type: Number,
+        required: true,
+      },
+      maximum: {
+        type: Number,
+        required: true,
+      },
+      type: {
+        type: String,
+        enum: ["fixed", "hourly"],
+        required: true,
+      },
+    },
+    deadline: {
+      type: Date,
+    },
+    status: {
+      type: String,
+      enum: ["open", "in-progress", "completed", "cancelled"],
+      default: "open",
+    },
+    attachments: [
+      {
+        type: String,
+      },
+    ],
+    assignedFreelancer: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+    visibility: {
+      type: String,
+      enum: ["public", "private"],
+      default: "public",
+    },
+    complexity: {
+      type: String,
+      enum: ["beginner", "intermediate", "expert"],
+      required: true,
+    },
+    estimatedDuration: {
+      type: String,
+      required: true,
+    },
   },
-  category: {
-    type: String,
-    required: [true, 'Please add a category']
-  },
-  skills: [{
-    type: String,
-    required: [true, 'Please add at least one required skill']
-  }],
-  status: {
-    type: String,
-    enum: ['open', 'in-progress', 'completed', 'cancelled'],
-    default: 'open'
-  },
-  deadline: {
-    type: Date
-  },
-  attachments: [{
-    type: String
-  }],
-  proposals: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Proposal'
-  }],
-  freelancer: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
+  {
+    timestamps: true,
   }
-});
+);
 
-// Add index for search
-ProjectSchema.index({ title: 'text', description: 'text', skills: 'text' });
+// Indexes for better query performance
+ProjectSchema.index({ title: "text", description: "text" });
+ProjectSchema.index({ status: 1 });
+ProjectSchema.index({ category: 1 });
+ProjectSchema.index({ client: 1 });
+ProjectSchema.index({ assignedFreelancer: 1 });
 
-export const Project = mongoose.model<IProject>('Project', ProjectSchema);
+export const Project = mongoose.model<IProject>("Project", ProjectSchema);
