@@ -1,55 +1,93 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Schema, Document, Types } from "mongoose";
+import { IUser } from "./User";
+import { IProject } from "./Project";
 
+// Interface for Proposal document
 export interface IProposal extends Document {
-  project: mongoose.Types.ObjectId;
-  freelancer: mongoose.Types.ObjectId;
+  project: Types.ObjectId | IProject;
+  freelancer: Types.ObjectId | IUser;
   coverLetter: string;
-  price: number;
-  timeframe: number; // in days
-  status: 'pending' | 'accepted' | 'rejected' | 'withdrawn';
+  bidAmount: number;
+  estimatedDuration: string;
+  status: "pending" | "accepted" | "rejected" | "withdrawn";
   attachments?: string[];
-  createdAt: Date;
+  milestones?: {
+    description: string;
+    amount: number;
+    dueDate: Date;
+  }[];
 }
 
-const ProposalSchema = new Schema({
-  project: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Project',
-    required: true
+// Interface for creating a new proposal
+export interface IProposalInput {
+  coverLetter: string;
+  bidAmount: number;
+  estimatedDuration: string;
+  attachments?: string[];
+  milestones?: {
+    description: string;
+    amount: number;
+    dueDate: Date;
+  }[];
+}
+
+// Schema definition
+const ProposalSchema = new Schema(
+  {
+    project: {
+      type: Schema.Types.ObjectId,
+      ref: "Project",
+      required: true,
+    },
+    freelancer: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    coverLetter: {
+      type: String,
+      required: true,
+    },
+    bidAmount: {
+      type: Number,
+      required: true,
+    },
+    estimatedDuration: {
+      type: String,
+      required: true,
+    },
+    status: {
+      type: String,
+      enum: ["pending", "accepted", "rejected", "withdrawn"],
+      default: "pending",
+    },
+    attachments: [{
+      type: String,
+    }],
+    milestones: [{
+      description: {
+        type: String,
+        required: true,
+      },
+      amount: {
+        type: Number,
+        required: true,
+      },
+      dueDate: {
+        type: Date,
+        required: true,
+      },
+    }],
   },
-  freelancer: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  coverLetter: {
-    type: String,
-    required: [true, 'Please add a cover letter'],
-    maxlength: [2000, 'Cover letter cannot be more than 2000 characters']
-  },
-  price: {
-    type: Number,
-    required: [true, 'Please add your price']
-  },
-  timeframe: {
-    type: Number,
-    required: [true, 'Please add estimated timeframe in days']
-  },
-  status: {
-    type: String,
-    enum: ['pending', 'accepted', 'rejected', 'withdrawn'],
-    default: 'pending'
-  },
-  attachments: [{
-    type: String
-  }],
-  createdAt: {
-    type: Date,
-    default: Date.now
+  {
+    timestamps: true,
   }
-});
+);
 
-// Prevent multiple proposals from same freelancer
+// Indexes for better query performance
 ProposalSchema.index({ project: 1, freelancer: 1 }, { unique: true });
+ProposalSchema.index({ status: 1 });
+ProposalSchema.index({ freelancer: 1 });
+ProposalSchema.index({ project: 1 });
 
-export const Proposal = mongoose.model<IProposal>('Proposal', ProposalSchema);
+export const Proposal = mongoose.model<IProposal>("Proposal", ProposalSchema);
