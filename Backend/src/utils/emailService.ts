@@ -119,8 +119,43 @@ const sendWelcomeEmail = async (email: string, firstName: string): Promise<boole
     return await sendEmail({ to: email, subject, text: `Welcome to SkillBridge, ${firstName}!`, html });
 };
 
+// Send login notification email
+const sendLoginNotificationEmail = async (email: string, firstName: string): Promise<boolean> => {
+    const subject = 'New Login Detected - SkillBridge';
+    const html = `
+        <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; background-color: #f9f9f9;">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <h1 style="color: #2C3E50; margin: 0;">SkillBridge</h1>
+                <p style="color: #7F8C8D; margin: 5px 0;">Where Talent Meets Opportunity</p>
+            </div>
+            <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h2 style="color: #2C3E50;">Hello ${firstName}!</h2>
+                <p>We noticed a new login to your SkillBridge account.</p>
+                <div style="margin: 20px 0;">
+                    <p style="color: #2C3E50; line-height: 1.6;">
+                        Time: ${new Date().toLocaleString()}<br>
+                        If this was you, you can safely ignore this email. If you didn't log in, please secure your account immediately.
+                    </p>
+                </div>
+                <div style="text-align: center; margin-top: 30px;">
+                    <a href="#" style="background-color: #3498DB; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; display: inline-block;">Review Account Activity</a>
+                </div>
+                <p style="color: #7F8C8D; font-size: 12px; margin-top: 20px; text-align: center;">
+                    For your security, please never share your login credentials with anyone.
+                </p>
+            </div>
+            <div style="text-align: center; margin-top: 20px; color: #7F8C8D; font-size: 12px;">
+                <p>&copy; ${new Date().getFullYear()} SkillBridge. All rights reserved.</p>
+            </div>
+        </div>
+    `;
+    
+    return await sendEmail({ to: email, subject, html });
+};
+
 export const emailService = {
     sendEmail,
     sendOTPEmail,
-    sendWelcomeEmail
+    sendWelcomeEmail,
+    sendLoginNotificationEmail
 };
