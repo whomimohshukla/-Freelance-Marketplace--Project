@@ -8,7 +8,7 @@ export interface IUser extends Document {
   password?: string; // Make password optional for response objects
   firstName: string;
   lastName: string;
-  role: "client" | "freelancer";
+  role: "client" | "freelancer" | "admin";
   skills: string[];
   hourlyRate?: number;
   joinDate: Date;
@@ -45,7 +45,7 @@ export interface IUserInput {
   password: string;
   firstName: string;
   lastName: string;
-  role: "client" | "freelancer";
+  role: "client" | "freelancer" | "admin";
   skills?: string[];
   hourlyRate?: number;
   status?: "active" | "inactive";
@@ -94,8 +94,8 @@ const UserSchema = new Schema(
     },
     role: {
       type: String,
-      enum: ["client", "freelancer"], // Only these values allowed
-      required: true,
+      enum: ["client", "freelancer", "admin"],
+      required: [true, "Role is required"],
     },
     skills: [
       {
