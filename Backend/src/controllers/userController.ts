@@ -258,10 +258,132 @@ const login = async (req: Request, res: Response) => {
   }
 };
 
+// get user
+
+export const getMe = async (
+  req: Request & { user?: IUser },
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const user = await User.findById(req.user?._id);
+    res.status(200).json({
+      success: true,
+      data: user,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateProfile = async (
+  req: Request & { user?: IUser },
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const fieldsToUpdate = {
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      email: req.body.email,
+      skills: req.body.skills,
+      hourlyRate: req.body.hourlyRate,
+      bio: req.body.bio,
+      location: req.body.location,
+      socialLinks: req.body.socialLinks,
+    };
+
+    const user = await User.findByIdAndUpdate(req.user?._id, fieldsToUpdate, {
+      new: true,
+      runValidators: true,
+    });
+
+    res.status(200).json({
+      success: true,
+      data: user,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+
+// // @desc    Upload profile image
+// // @route   PUT /api/users/profile/image
+// // @access  Private
+// export const uploadProfileImage = async (
+//   req: Request & { user?: IUser; files?: any },
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   try {
+//     if (!req.files) {
+//       return next(new ErrorResponse("Please upload a file", 400));
+//     }
+
+//     const file = req.files.file;
+
+//     // Check file type
+//     if (!file.mimetype.startsWith("image")) {
+//       return next(new ErrorResponse("Please upload an image file", 400));
+//     }
+
+//     // Upload to S3 or your preferred storage
+//     const imageUrl = await uploadToS3(file);
+
+//     // Update user profile with image URL
+//     const user = await User.findByIdAndUpdate(
+//       req.user?._id,
+//       { profileImage: imageUrl },
+//       { new: true }
+//     );
+
+//     res.status(200).json({
+//       success: true,
+//       data: user,
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+// 
+
+// export const updatePassword = async (
+//   req: Request & { user?: IUser },
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   try {
+//     const user = await User.findById(req.user?._id).select('+password');
+
+//     // Check current password
+//     const isMatch = await user?.matchPassword(req.body.currentPassword);
+//     if (!isMatch) {
+//       return next(new ErrorResponse('Current password is incorrect', 401));
+//     }
+
+//     // Update password
+//     if (user) {
+//       user.password = req.body.newPassword;
+//       await user.save();
+//     }
+
+//     sendTokenResponse(user as IUser, 200, res);
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
 // Export the controller functions
 export const userController = {
   sendOTP: sendOTP as RequestHandler,
   resendOTP: resendOTP as RequestHandler,
   signup: signup as RequestHandler,
   login: login as RequestHandler,
+  // forgotPassword: forgotPassword as RequestHandler,
+  // resetPassword: resetPassword as RequestHandler,
+  updateProfile: updateProfile as RequestHandler,
+  // updatePassword: updatePassword as RequestHandler,
+  getMe: getMe as RequestHandler,
 };
