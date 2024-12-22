@@ -319,7 +319,7 @@ const Messaging = () => {
         </motion.div>
       </div>
 
-      <style jsx>{`
+      {/* <style jsx>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 6px;
         }
@@ -333,7 +333,7 @@ const Messaging = () => {
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
           background-color: rgba(156, 163, 175, 0.5);
         }
-      `}</style>
+      `}</style> */}
     </div>
   );
 };
