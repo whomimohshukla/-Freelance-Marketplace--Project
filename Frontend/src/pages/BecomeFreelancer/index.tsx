@@ -1,10 +1,10 @@
-import React from "react";
+// import React from "react";
 import { motion } from "framer-motion";
 import { 
   FiCode, FiPenTool, FiBarChart, FiCamera, FiHeadphones, FiLayout, 
   FiArrowRight, FiUser, FiSearch, FiSend, FiDollarSign, FiShield, 
   FiMessageSquare, FiStar, FiClock, FiCheckCircle, FiTrendingUp, FiGlobe,
-  FiBook, FiUsers, FiArchive, FiAward, FiZap, FiCreditCard, FiCheck, FiPieChart, FiBookOpen,
+   FiZap, FiCreditCard, FiCheck, FiPieChart, FiBookOpen,
   FiPlay, FiLock, FiEdit, FiCpu, FiTool
 } from "react-icons/fi";
 import { Link } from "react-router-dom";

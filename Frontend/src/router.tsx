@@ -1,7 +1,6 @@
 import { createBrowserRouter } from "react-router-dom";
 import App from "./App";
 import SearchProjects from "./components/features/SearchProjects";
-// import Messaging from './components/features/Messaging';
 import SecurePayments from "./components/features/SecurePayments";
 import FindTalent from "./components/features/FindTalent";
 import Home from "./pages/Home";
@@ -12,6 +11,8 @@ import GuideComponent from "./components/features/Guide";
 import HelpCenter from "./components/features/HelpCenter";
 import Documentation from "./components/features/Documentation";
 import ContactUs from "./components/features/ContactUs";
+import VideoCall from "./components/features/VideoCall";
+import Pricing from "./components/features/Pricing";
 
 export const router = createBrowserRouter([
   {
@@ -26,10 +27,10 @@ export const router = createBrowserRouter([
         path: "features/search",
         element: <SearchProjects />,
       },
-      // {
-      //   path: 'features/messaging',
-      //   element: <Messaging />,
-      // },
+      {
+        path: "features/video-call",
+        element: <VideoCall />,
+      },
       {
         path: "features/payments",
         element: <SecurePayments />,
@@ -66,14 +67,18 @@ export const router = createBrowserRouter([
         path: "/contact",
         element: <ContactUs />,
       },
+      {
+        path: "/pricing",
+        element: <Pricing />,
+      },
+      {
+        path: "/login",
+        element: <Login />,
+      },
+      {
+        path: "/register",
+        element: <Register />,
+      },
     ],
-  },
-  {
-    path: "/login",
-    element: <Login />,
-  },
-  {
-    path: "/register",
-    element: <Register />,
   },
 ]);
