@@ -7,6 +7,7 @@ import FindTalent from "./components/features/FindTalent";
 import Home from "./pages/Home";
 import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";
+import BecomeFreelancer from './pages/BecomeFreelancer';
 
 export const router = createBrowserRouter([
   {
@@ -32,6 +33,10 @@ export const router = createBrowserRouter([
       {
         path: "features/find-talent",
         element: <FindTalent />,
+      },
+      {
+        path: "/become-freelancer",
+        element: <BecomeFreelancer />,
       },
     ],
   },
