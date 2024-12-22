@@ -6,7 +6,7 @@ function Footer() {
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <h3 className="text-white font-semibold text-lg mb-4">FreelanceHub</h3>
+            <h3 className="text-white font-semibold text-lg mb-4">SkillBridge</h3>
             <p className="text-gray-400 text-sm">
               Connect with top talent and grow your business with our AI-powered freelancing platform.
             </p>
@@ -38,7 +38,7 @@ function Footer() {
         </div>
         <div className="border-t border-code-green/20 mt-8 pt-8 text-center">
           <p className="text-gray-400 text-sm">
-            2024 FreelanceHub. All rights reserved.
+            &copy; 2024 SkillBridge. All rights reserved.
           </p>
         </div>
       </div>
