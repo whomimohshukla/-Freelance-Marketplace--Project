@@ -1,127 +1,137 @@
 import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { Link } from 'react-router-dom'
+import { FiChevronDown } from 'react-icons/fi'
 
-function Navbar() {
+const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   return (
-    <motion.nav 
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.6 }}
-      className="fixed w-full z-50 backdrop-blur-md bg-dark-blue/80 border-b border-code-green/10"
-    >
-      <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center h-16">
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="flex items-center"
-          >
-            <a href="/" className="text-2xl font-bold bg-gradient-to-r from-code-green to-[#80FFF2] text-transparent bg-clip-text hover:scale-105 transition-transform">
-              SkillBridge
-            </a>
-          </motion.div>
-
-          {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-6">
-            {['Find Talent', 'Find Work', 'Why Us'].map((item, index) => (
-              <motion.a
-                key={item}
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 * (index + 1) }}
-                href="#"
-                className="text-sm text-gray-300 hover:text-code-green transition-colors relative group"
-              >
-                {item}
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-code-green transition-all duration-300 group-hover:w-full"></span>
-              </motion.a>
-            ))}
-            <motion.div 
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="ml-6 flex items-center space-x-3"
-            >
-              <button className="group text-sm bg-transparent text-gray-300 hover:text-code-green px-4 py-2 rounded-lg transition-colors relative">
-                Sign In
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-code-green transition-all duration-300 group-hover:w-full"></span>
-              </button>
-              <button className="group text-sm bg-code-green hover:bg-accent-hover text-dark-blue px-4 py-2 rounded-lg transition-all duration-200 hover:shadow-[0_0_20px_rgba(0,245,196,0.3)] relative overflow-hidden">
-                <span className="relative z-10">Sign Up Free</span>
-                <div className="absolute inset-0 h-full w-0 bg-white/20 transition-all duration-300 group-hover:w-full"></div>
-              </button>
-            </motion.div>
+    <nav className="fixed top-0 left-0 right-0 bg-gray-900/80 backdrop-blur-lg border-b border-gray-800 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-[72px]">
+          {/* Logo */}
+          <div className="flex-shrink-0">
+            <Link to="/" className="flex items-center">
+              <span className="text-2xl font-bold text-white">SkillBridge</span>
+            </Link>
           </div>
 
-          {/* Mobile Menu Button */}
-          <motion.button 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6 }}
-            className="md:hidden text-gray-300 hover:text-code-green"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              {isMenuOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              )}
-            </svg>
-          </motion.button>
-        </div>
-
-        {/* Mobile Menu */}
-        <AnimatePresence>
-          {isMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
-              className="md:hidden overflow-hidden"
-            >
-              <div className="py-4 space-y-4 border-t border-code-green/10">
-                {['Find Talent', 'Find Work', 'Why Us'].map((item, index) => (
-                  <motion.a
-                    key={item}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3, delay: 0.1 * index }}
-                    href="#"
-                    className="block text-sm text-gray-300 hover:text-code-green transition-colors relative group px-2"
-                  >
-                    {item}
-                  </motion.a>
-                ))}
-                <div className="space-y-2 pt-2 border-t border-code-green/10">
-                  <motion.button
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3, delay: 0.3 }}
-                    className="w-full text-sm text-gray-300 hover:text-code-green px-4 py-2 rounded-lg transition-colors relative group"
-                  >
-                    Sign In
-                  </motion.button>
-                  <motion.button
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3, delay: 0.4 }}
-                    className="group w-full text-sm bg-code-green hover:bg-accent-hover text-dark-blue px-4 py-2 rounded-lg transition-all duration-200 hover:shadow-[0_0_20px_rgba(0,245,196,0.3)] relative overflow-hidden"
-                  >
-                    <span className="relative z-10">Sign Up Free</span>
-                    <div className="absolute inset-0 h-full w-0 bg-white/20 transition-all duration-300 group-hover:w-full"></div>
-                  </motion.button>
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex md:items-center md:space-x-8">
+            <div className="relative group">
+              <button className="flex items-center space-x-1 text-gray-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors">
+                <span>Features</span>
+                <FiChevronDown className="h-4 w-4 group-hover:rotate-180 transition-transform duration-200" />
+              </button>
+              <div className="absolute left-0 mt-2 w-48 rounded-xl bg-gray-900 border border-gray-800 shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-left">
+                <div className="py-2 px-3">
+                  <Link to="/features/search" className="block px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
+                    Search Projects
+                  </Link>
+                  <Link to="/features/messaging" className="block px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
+                    Messaging
+                  </Link>
+                  <Link to="/features/payments" className="block px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
+                    Secure Payments
+                  </Link>
                 </div>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
+
+            <div className="relative group">
+              <button className="flex items-center space-x-1 text-gray-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors">
+                <span>Resources</span>
+                <FiChevronDown className="h-4 w-4 group-hover:rotate-180 transition-transform duration-200" />
+              </button>
+              <div className="absolute left-0 mt-2 w-48 rounded-xl bg-gray-900 border border-gray-800 shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-left">
+                <div className="py-2 px-3">
+                  <Link to="/resources/blog" className="block px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
+                    Blog
+                  </Link>
+                  <Link to="/resources/guides" className="block px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
+                    Guides
+                  </Link>
+                  <Link to="/resources/help" className="block px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
+                    Help Center
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            <Link to="/pricing" className="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors">
+              Pricing
+            </Link>
+          </div>
+
+          {/* Auth Buttons */}
+          <div className="hidden md:flex md:items-center md:space-x-4">
+            <Link
+              to="/login"
+              className="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors"
+            >
+              Sign in
+            </Link>
+            <Link
+              to="/register"
+              className="bg-code-green hover:bg-code-green/90 text-gray-900 px-4 py-2 text-sm font-medium rounded-lg transition-colors"
+            >
+              Sign up
+            </Link>
+          </div>
+
+          {/* Mobile menu button */}
+          <div className="flex md:hidden">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="inline-flex items-center justify-center p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-code-green"
+            >
+              <span className="sr-only">Open main menu</span>
+              <div className="h-6 w-6 flex flex-col justify-between">
+                <span className={`block w-full h-0.5 bg-current transform transition-all duration-300 ${isMenuOpen ? 'rotate-45 translate-y-2.5' : ''}`} />
+                <span className={`block w-full h-0.5 bg-current transition-all duration-300 ${isMenuOpen ? 'opacity-0' : ''}`} />
+                <span className={`block w-full h-0.5 bg-current transform transition-all duration-300 ${isMenuOpen ? '-rotate-45 -translate-y-2.5' : ''}`} />
+              </div>
+            </button>
+          </div>
+        </div>
       </div>
-    </motion.nav>
+
+      {/* Mobile menu */}
+      <div className={`md:hidden ${isMenuOpen ? 'block' : 'hidden'}`}>
+        <div className="px-2 pt-2 pb-3 space-y-1 bg-gray-900 border-t border-gray-800">
+          <Link
+            to="/features"
+            className="block px-3 py-2 text-base font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+          >
+            Features
+          </Link>
+          <Link
+            to="/resources"
+            className="block px-3 py-2 text-base font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+          >
+            Resources
+          </Link>
+          <Link
+            to="/pricing"
+            className="block px-3 py-2 text-base font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+          >
+            Pricing
+          </Link>
+          <Link
+            to="/login"
+            className="block px-3 py-2 text-base font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+          >
+            Sign in
+          </Link>
+          <Link
+            to="/register"
+            className="block px-3 py-2 text-base font-medium text-white bg-code-green hover:bg-code-green/90 rounded-lg transition-colors"
+          >
+            Sign up
+          </Link>
+        </div>
+      </div>
+    </nav>
   )
 }
 
