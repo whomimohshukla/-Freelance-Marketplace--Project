@@ -5,7 +5,7 @@ import {
   FiArrowRight, FiUser, FiSearch, FiSend, FiDollarSign, FiShield, 
   FiMessageSquare, FiStar, FiClock, FiCheckCircle, FiTrendingUp, FiGlobe,
   FiBook, FiUsers, FiArchive, FiAward, FiZap, FiCreditCard, FiCheck, FiPieChart, FiBookOpen,
-  FiPlay, FiLock, FiEdit
+  FiPlay, FiLock, FiEdit, FiCpu, FiTool
 } from "react-icons/fi";
 import { Link } from "react-router-dom";
 
@@ -185,84 +185,142 @@ const BecomeFreelancer = () => {
     }
   ];
 
-  const resources = [
+  const platformAdvantages = [
     {
-      title: "Freelancer Academy",
-      description: "Free courses and tutorials to help you succeed",
-      icon: FiBook,
-      color: "from-purple-500 to-pink-500"
+      title: "AI-Powered Matching",
+      description: "Smart algorithms that connect you with perfect projects",
+      icon: FiCpu,
+      color: "from-purple-500 to-indigo-500"
     },
     {
-      title: "Community Forums",
-      description: "Connect and learn from experienced freelancers",
-      icon: FiUsers,
-      color: "from-blue-500 to-teal-500"
+      title: "Global Opportunities",
+      description: "Access projects from companies worldwide",
+      icon: FiGlobe,
+      color: "from-blue-500 to-cyan-500"
     },
     {
-      title: "Resource Library",
-      description: "Templates, guides, and best practices",
-      icon: FiArchive,
-      color: "from-orange-500 to-red-500"
+      title: "Milestone Payments",
+      description: "Get paid securely as you complete project milestones",
+      icon: FiDollarSign,
+      color: "from-emerald-500 to-green-500"
     },
     {
-      title: "Skill Assessments",
-      description: "Verify your expertise with certified tests",
-      icon: FiAward,
-      color: "from-green-500 to-emerald-500"
+      title: "Premium Tools",
+      description: "Access to professional project management tools",
+      icon: FiTool,
+      color: "from-orange-500 to-amber-500"
     }
   ];
 
   const successMetrics = [
     {
-      metric: "Average Project Value",
-      value: "$2,500",
-      growth: "+25%",
-      period: "vs last year"
+      metric: "Project Opportunities",
+      value: "1,000+",
+      description: "Available projects to start",
+      period: "Launch offer"
     },
     {
-      metric: "Client Satisfaction",
-      value: "4.8/5",
-      growth: "+12%",
-      period: "vs industry average"
+      metric: "Client Companies",
+      value: "100+",
+      description: "Ready to hire freelancers",
+      period: "Active clients"
     },
     {
-      metric: "Project Success Rate",
-      value: "95%",
-      growth: "+15%",
-      period: "year over year"
+      metric: "Commission Rate",
+      value: "5%",
+      description: "Platform fee",
+      period: "Limited time"
     }
   ];
 
   const platformFeatures = [
     {
       title: "Smart Matching",
-      description: "AI-powered project recommendations based on your skills and experience",
+      description: "Get matched with projects that fit your skills perfectly",
       icon: FiZap
     },
     {
       title: "Instant Payments",
-      description: "Get paid within 24 hours of project completion",
+      description: "Secure payment system with quick withdrawals",
       icon: FiCreditCard
     },
     {
       title: "Dispute Protection",
-      description: "Dedicated support team to resolve any issues",
+      description: "Fair resolution process with dedicated support",
       icon: FiShield
     },
     {
       title: "Skills Verification",
-      description: "Showcase your expertise with verified badges",
+      description: "Stand out with verified skill badges",
       icon: FiCheck
     },
     {
-      title: "Project Analytics",
-      description: "Track your performance and earnings in real-time",
+      title: "Project Management",
+      description: "Built-in tools to manage your work efficiently",
       icon: FiPieChart
     },
     {
-      title: "Learning Hub",
-      description: "Access to premium courses and certifications",
+      title: "Learning Resources",
+      description: "Free resources to enhance your skills",
       icon: FiBookOpen
+    }
+  ];
+
+  const videoTestimonials = [
+    {
+      name: "Join Our Platform",
+      role: "Early Access Benefits",
+      quote: "Be among the first freelancers to access exclusive projects"
+    },
+    {
+      name: "Launch Offer",
+      role: "Limited Time",
+      quote: "Get verified status free for the first 3 months"
+    }
+  ];
+
+  const trustFeatures = [
+    {
+      title: "Verified Clients",
+      description: "All clients go through strict verification before posting projects",
+      icon: FiShield
+    },
+    {
+      title: "Secure Payments",
+      description: "Your earnings are protected by our escrow system",
+      icon: FiLock
+    },
+    {
+      title: "24/7 Support",
+      description: "Get help anytime during your freelancing journey",
+      icon: FiHeadphones
+    }
+  ];
+
+  const categoriesList = [
+    {
+      name: "Development",
+      count: "500+",
+      icon: FiCode,
+      subcategories: ["Web", "Mobile", "Backend"]
+    },
+    {
+      name: "Design",
+      count: "300+",
+      icon: FiLayout,
+      subcategories: ["UI/UX", "Graphic", "Brand"]
+    },
+    {
+      name: "Marketing",
+      count: "200+",
+      icon: FiTrendingUp,
+      subcategories: ["Digital", "Content", "SEO"]
+    },
+    {
+      name: "Writing",
+      count: "150+",
+      icon: FiEdit,
+      subcategories: ["Content", "Technical", "Creative"]
     }
   ];
 
@@ -290,68 +348,6 @@ const BecomeFreelancer = () => {
       description: "Collaborate with clients and deliver quality work",
       icon: FiPlay,
       color: "from-pink-500 to-rose-500"
-    }
-  ];
-
-  const categoriesList = [
-    {
-      name: "Development",
-      count: "5,234",
-      icon: FiCode,
-      subcategories: ["Web", "Mobile", "Backend"]
-    },
-    {
-      name: "Design",
-      count: "3,876",
-      icon: FiLayout,
-      subcategories: ["UI/UX", "Graphic", "Brand"]
-    },
-    {
-      name: "Marketing",
-      count: "2,543",
-      icon: FiTrendingUp,
-      subcategories: ["Digital", "Content", "SEO"]
-    },
-    {
-      name: "Writing",
-      count: "1,987",
-      icon: FiEdit,
-      subcategories: ["Content", "Technical", "Creative"]
-    }
-  ];
-
-  const videoTestimonials = [
-    {
-      name: "Sarah Chen",
-      role: "Full Stack Developer",
-      video: "/videos/testimonial1.mp4",
-      thumbnail: "/images/testimonial1.jpg",
-      quote: "Doubled my income in 6 months"
-    },
-    {
-      name: "Michael Rodriguez",
-      role: "UI/UX Designer",
-      video: "/videos/testimonial2.mp4",
-      thumbnail: "/images/testimonial2.jpg",
-      quote: "Found amazing long-term clients"
-    }
-  ];
-
-  const trustFeatures = [
-    {
-      title: "Verified Clients",
-      description: "All clients are verified through a strict verification process",
-      icon: FiShield
-    },
-    {
-      title: "Secure Payments",
-      description: "Your earnings are protected through our escrow system",
-      icon: FiLock
-    },
-    {
-      title: "24/7 Support",
-      description: "Dedicated support team available around the clock",
-      icon: FiHeadphones
     }
   ];
 
@@ -450,7 +446,7 @@ const BecomeFreelancer = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="relative group cursor-pointer"
+                className="group relative"
               >
                 <div
                   className="absolute inset-0 bg-gradient-to-r bg-opacity-50 rounded-2xl blur-xl transition-all duration-300 group-hover:opacity-100 opacity-0"
@@ -768,7 +764,7 @@ const BecomeFreelancer = () => {
               transition={{ duration: 0.5 }}
               className="text-3xl sm:text-4xl font-bold text-white mb-4"
             >
-              Platform Success Metrics
+              Launch Opportunities
             </motion.h2>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -776,7 +772,7 @@ const BecomeFreelancer = () => {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="text-gray-400 max-w-2xl mx-auto"
             >
-              Real results from our thriving freelancer community
+              Join our platform early and unlock exclusive benefits
             </motion.p>
           </div>
 
@@ -794,9 +790,9 @@ const BecomeFreelancer = () => {
                   <h3 className="text-gray-400 text-sm mb-2">{item.metric}</h3>
                   <div className="flex items-end gap-4 mb-4">
                     <span className="text-4xl font-bold text-white">{item.value}</span>
-                    <span className="text-green-400 text-sm mb-1">{item.growth}</span>
                   </div>
-                  <p className="text-gray-500 text-sm">{item.period}</p>
+                  <p className="text-gray-400">{item.description}</p>
+                  <p className="text-sm text-code-green mt-2">{item.period}</p>
                 </div>
               </motion.div>
             ))}
@@ -851,7 +847,7 @@ const BecomeFreelancer = () => {
         </div>
       </div>
 
-      {/* Freelancer Resources */}
+      {/* Platform Advantages Section */}
       <div className="py-20 bg-gray-900/50 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#00f5c410,transparent_70%)]" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
@@ -862,7 +858,7 @@ const BecomeFreelancer = () => {
               transition={{ duration: 0.5 }}
               className="text-3xl sm:text-4xl font-bold text-white mb-4"
             >
-              Resources for Success
+              Why Choose Our Platform
             </motion.h2>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -870,38 +866,88 @@ const BecomeFreelancer = () => {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="text-gray-400 max-w-2xl mx-auto"
             >
-              Everything you need to grow your freelance business
+              Cutting-edge features designed for modern freelancers
             </motion.p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {resources.map((resource, index) => (
+            {platformAdvantages.map((advantage, index) => (
               <motion.div
-                key={resource.title}
+                key={advantage.title}
                 initial={{ opacity: 0, x: index % 2 === 0 ? -20 : 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 className="group cursor-pointer"
               >
-                <div className={`relative overflow-hidden rounded-xl bg-gradient-to-r ${resource.color} p-1`}>
-                  <div className="relative bg-gray-900 backdrop-blur-xl p-6 rounded-lg">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 rounded-lg bg-gray-800">
-                        <resource.icon className="h-6 w-6 text-white" />
+                <div className={`relative overflow-hidden rounded-xl bg-gradient-to-r ${advantage.color} p-[2px]`}>
+                  <div className="relative bg-gray-900 backdrop-blur-xl p-8 rounded-[11px] h-full">
+                    <div className="flex items-start gap-6">
+                      <div className="flex-shrink-0">
+                        <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${advantage.color} p-[1px]`}>
+                          <div className="w-full h-full rounded-xl bg-gray-900 flex items-center justify-center">
+                            <advantage.icon className="h-6 w-6 text-white" />
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="text-lg font-semibold text-white mb-1">
-                          {resource.title}
+                      <div className="flex-1">
+                        <h3 className="text-xl font-semibold text-white mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-gray-300 transition-all duration-300">
+                          {advantage.title}
                         </h3>
-                        <p className="text-gray-400">
-                          {resource.description}
+                        <p className="text-gray-400 group-hover:text-gray-300 transition-colors duration-300">
+                          {advantage.description}
                         </p>
+                        <div className="mt-4 flex items-center text-sm text-white/50 group-hover:text-white/70 transition-colors duration-300">
+                          <span>Learn more</span>
+                          <FiArrowRight className="ml-2 h-4 w-4 transform group-hover:translate-x-1 transition-transform duration-300" />
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
               </motion.div>
             ))}
+          </div>
+
+          {/* Additional Features Grid */}
+          <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="bg-gray-800/50 backdrop-blur-xl p-6 rounded-xl border border-gray-700/50"
+            >
+              <div className="flex items-center gap-4 mb-3">
+                <FiShield className="h-6 w-6 text-code-green" />
+                <h3 className="text-lg font-semibold text-white">Secure Platform</h3>
+              </div>
+              <p className="text-gray-400">Advanced encryption and secure payment processing</p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="bg-gray-800/50 backdrop-blur-xl p-6 rounded-xl border border-gray-700/50"
+            >
+              <div className="flex items-center gap-4 mb-3">
+                <FiClock className="h-6 w-6 text-code-green" />
+                <h3 className="text-lg font-semibold text-white">Time Tracking</h3>
+              </div>
+              <p className="text-gray-400">Built-in tools to track and bill your working hours</p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="bg-gray-800/50 backdrop-blur-xl p-6 rounded-xl border border-gray-700/50"
+            >
+              <div className="flex items-center gap-4 mb-3">
+                <FiMessageSquare className="h-6 w-6 text-code-green" />
+                <h3 className="text-lg font-semibold text-white">Collaboration Tools</h3>
+              </div>
+              <p className="text-gray-400">Integrated chat, file sharing, and project workspace</p>
+            </motion.div>
           </div>
         </div>
       </div>
@@ -979,7 +1025,7 @@ const BecomeFreelancer = () => {
               transition={{ duration: 0.5 }}
               className="text-3xl sm:text-4xl font-bold text-white mb-4"
             >
-              Featured Categories
+              Available Project Categories
             </motion.h2>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -987,7 +1033,7 @@ const BecomeFreelancer = () => {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="text-gray-400 max-w-2xl mx-auto"
             >
-              Explore opportunities in these popular categories
+              Discover opportunities in your field of expertise
             </motion.p>
           </div>
 
@@ -1038,7 +1084,7 @@ const BecomeFreelancer = () => {
               transition={{ duration: 0.5 }}
               className="text-3xl sm:text-4xl font-bold text-white mb-4"
             >
-              Success Stories
+              Early Access Benefits
             </motion.h2>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -1046,7 +1092,7 @@ const BecomeFreelancer = () => {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="text-gray-400 max-w-2xl mx-auto"
             >
-              Hear directly from our successful freelancers
+              Special perks for our first freelancers
             </motion.p>
           </div>
 
@@ -1061,22 +1107,18 @@ const BecomeFreelancer = () => {
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-code-green/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-xl" />
                 <div className="relative bg-gray-800/50 backdrop-blur-xl p-6 rounded-xl border border-gray-700/50">
-                  <div className="aspect-video rounded-lg overflow-hidden mb-6 bg-gray-900">
-                    {/* Video thumbnail placeholder */}
-                    <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-                      <FiPlay className="h-12 w-12 text-code-green" />
-                    </div>
-                  </div>
                   <div className="flex items-center gap-4 mb-4">
-                    <div className="h-12 w-12 rounded-full bg-gray-700" />
+                    <div className="h-12 w-12 rounded-full bg-code-green/20 flex items-center justify-center">
+                      <FiStar className="h-6 w-6 text-code-green" />
+                    </div>
                     <div>
                       <h3 className="text-lg font-semibold text-white">
                         {testimonial.name}
                       </h3>
-                      <p className="text-gray-400">{testimonial.role}</p>
+                      <p className="text-code-green">{testimonial.role}</p>
                     </div>
                   </div>
-                  <p className="text-gray-300 italic">"{testimonial.quote}"</p>
+                  <p className="text-gray-300">{testimonial.quote}</p>
                 </div>
               </motion.div>
             ))}
@@ -1095,7 +1137,7 @@ const BecomeFreelancer = () => {
               transition={{ duration: 0.5 }}
               className="text-3xl sm:text-4xl font-bold text-white mb-4"
             >
-              Trust & Safety
+              Platform Security
             </motion.h2>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -1103,7 +1145,7 @@ const BecomeFreelancer = () => {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="text-gray-400 max-w-2xl mx-auto"
             >
-              Your security and success is our top priority
+              Built with your security and success in mind
             </motion.p>
           </div>
 
