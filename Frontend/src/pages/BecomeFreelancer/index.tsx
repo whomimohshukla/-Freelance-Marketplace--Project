@@ -4,7 +4,8 @@ import {
   FiCode, FiPenTool, FiBarChart, FiCamera, FiHeadphones, FiLayout, 
   FiArrowRight, FiUser, FiSearch, FiSend, FiDollarSign, FiShield, 
   FiMessageSquare, FiStar, FiClock, FiCheckCircle, FiTrendingUp, FiGlobe,
-  FiBook, FiUsers, FiArchive, FiAward, FiZap, FiCreditCard, FiCheck, FiPieChart, FiBookOpen
+  FiBook, FiUsers, FiArchive, FiAward, FiZap, FiCreditCard, FiCheck, FiPieChart, FiBookOpen,
+  FiPlay, FiLock, FiEdit
 } from "react-icons/fi";
 import { Link } from "react-router-dom";
 
@@ -262,6 +263,95 @@ const BecomeFreelancer = () => {
       title: "Learning Hub",
       description: "Access to premium courses and certifications",
       icon: FiBookOpen
+    }
+  ];
+
+  const timelineSteps = [
+    {
+      title: "Create Your Profile",
+      description: "Set up your professional profile with portfolio and skills",
+      icon: FiUser,
+      color: "from-blue-500 to-purple-500"
+    },
+    {
+      title: "Get Verified",
+      description: "Complete skill assessments and verify your identity",
+      icon: FiCheck,
+      color: "from-green-500 to-teal-500"
+    },
+    {
+      title: "Find Projects",
+      description: "Browse and apply to relevant projects in your field",
+      icon: FiSearch,
+      color: "from-orange-500 to-red-500"
+    },
+    {
+      title: "Start Working",
+      description: "Collaborate with clients and deliver quality work",
+      icon: FiPlay,
+      color: "from-pink-500 to-rose-500"
+    }
+  ];
+
+  const categoriesList = [
+    {
+      name: "Development",
+      count: "5,234",
+      icon: FiCode,
+      subcategories: ["Web", "Mobile", "Backend"]
+    },
+    {
+      name: "Design",
+      count: "3,876",
+      icon: FiLayout,
+      subcategories: ["UI/UX", "Graphic", "Brand"]
+    },
+    {
+      name: "Marketing",
+      count: "2,543",
+      icon: FiTrendingUp,
+      subcategories: ["Digital", "Content", "SEO"]
+    },
+    {
+      name: "Writing",
+      count: "1,987",
+      icon: FiEdit,
+      subcategories: ["Content", "Technical", "Creative"]
+    }
+  ];
+
+  const videoTestimonials = [
+    {
+      name: "Sarah Chen",
+      role: "Full Stack Developer",
+      video: "/videos/testimonial1.mp4",
+      thumbnail: "/images/testimonial1.jpg",
+      quote: "Doubled my income in 6 months"
+    },
+    {
+      name: "Michael Rodriguez",
+      role: "UI/UX Designer",
+      video: "/videos/testimonial2.mp4",
+      thumbnail: "/images/testimonial2.jpg",
+      quote: "Found amazing long-term clients"
+    }
+  ];
+
+  const trustFeatures = [
+    {
+      title: "Verified Clients",
+      description: "All clients are verified through a strict verification process",
+      icon: FiShield
+    },
+    {
+      title: "Secure Payments",
+      description: "Your earnings are protected through our escrow system",
+      icon: FiLock
+    },
+    {
+      title: "24/7 Support",
+      description: "Dedicated support team available around the clock",
+      icon: FiHeadphones
     }
   ];
 
@@ -809,6 +899,232 @@ const BecomeFreelancer = () => {
                       </div>
                     </div>
                   </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Timeline Section */}
+      <div className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="text-3xl sm:text-4xl font-bold text-white mb-4"
+            >
+              Your Journey to Success
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="text-gray-400 max-w-2xl mx-auto"
+            >
+              Follow these steps to start your freelancing career
+            </motion.p>
+          </div>
+
+          <div className="relative">
+            <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-px bg-gradient-to-b from-code-green/50 to-transparent" />
+            <div className="space-y-16">
+              {timelineSteps.map((step, index) => (
+                <motion.div
+                  key={step.title}
+                  initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.2 }}
+                  className={`flex items-center gap-8 ${
+                    index % 2 === 0 ? "flex-row" : "flex-row-reverse"
+                  }`}
+                >
+                  <div className="flex-1">
+                    <div className="relative group">
+                      <div className={`absolute inset-0 bg-gradient-to-r ${step.color} opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl blur-lg`} />
+                      <div className="relative bg-gray-800/50 backdrop-blur-xl p-8 rounded-xl border border-gray-700/50">
+                        <step.icon className="h-8 w-8 text-code-green mb-4" />
+                        <h3 className="text-xl font-semibold text-white mb-2">
+                          {step.title}
+                        </h3>
+                        <p className="text-gray-400">
+                          {step.description}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="relative">
+                    <div className="h-12 w-12 rounded-full bg-gray-800 border-4 border-code-green flex items-center justify-center">
+                      <span className="text-white font-bold">{index + 1}</span>
+                    </div>
+                  </div>
+                  <div className="flex-1" />
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Featured Categories */}
+      <div className="py-20 bg-gray-900/50 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#00f5c410,transparent_70%)]" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          <div className="text-center mb-16">
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="text-3xl sm:text-4xl font-bold text-white mb-4"
+            >
+              Featured Categories
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="text-gray-400 max-w-2xl mx-auto"
+            >
+              Explore opportunities in these popular categories
+            </motion.p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {categoriesList.map((category, index) => (
+              <motion.div
+                key={category.name}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className="group cursor-pointer"
+              >
+                <div className="relative overflow-hidden rounded-xl bg-gray-800/50 backdrop-blur-xl p-6 border border-gray-700/50">
+                  <div className="absolute inset-0 bg-gradient-to-br from-code-green/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300" />
+                  <div className="relative">
+                    <div className="flex items-center justify-between mb-4">
+                      <category.icon className="h-8 w-8 text-code-green" />
+                      <span className="text-sm text-gray-400">{category.count} jobs</span>
+                    </div>
+                    <h3 className="text-xl font-semibold text-white mb-4 group-hover:text-code-green transition-colors duration-300">
+                      {category.name}
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {category.subcategories.map((sub) => (
+                        <span
+                          key={sub}
+                          className="px-3 py-1 text-sm bg-gray-700/50 text-gray-300 rounded-full"
+                        >
+                          {sub}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Video Testimonials */}
+      <div className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="text-3xl sm:text-4xl font-bold text-white mb-4"
+            >
+              Success Stories
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="text-gray-400 max-w-2xl mx-auto"
+            >
+              Hear directly from our successful freelancers
+            </motion.p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {videoTestimonials.map((testimonial, index) => (
+              <motion.div
+                key={testimonial.name}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: index * 0.2 }}
+                className="relative group"
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-code-green/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-xl" />
+                <div className="relative bg-gray-800/50 backdrop-blur-xl p-6 rounded-xl border border-gray-700/50">
+                  <div className="aspect-video rounded-lg overflow-hidden mb-6 bg-gray-900">
+                    {/* Video thumbnail placeholder */}
+                    <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+                      <FiPlay className="h-12 w-12 text-code-green" />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="h-12 w-12 rounded-full bg-gray-700" />
+                    <div>
+                      <h3 className="text-lg font-semibold text-white">
+                        {testimonial.name}
+                      </h3>
+                      <p className="text-gray-400">{testimonial.role}</p>
+                    </div>
+                  </div>
+                  <p className="text-gray-300 italic">"{testimonial.quote}"</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Trust & Safety */}
+      <div className="py-20 bg-gray-900/50 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#00f5c410,transparent_70%)]" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          <div className="text-center mb-16">
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="text-3xl sm:text-4xl font-bold text-white mb-4"
+            >
+              Trust & Safety
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="text-gray-400 max-w-2xl mx-auto"
+            >
+              Your security and success is our top priority
+            </motion.p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {trustFeatures.map((feature, index) => (
+              <motion.div
+                key={feature.title}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className="relative group"
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-code-green/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-xl" />
+                <div className="relative bg-gray-800/30 backdrop-blur-xl p-8 rounded-xl border border-gray-700/50 text-center">
+                  <feature.icon className="h-10 w-10 text-code-green mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-white mb-4">
+                    {feature.title}
+                  </h3>
+                  <p className="text-gray-400">
+                    {feature.description}
+                  </p>
                 </div>
               </motion.div>
             ))}
