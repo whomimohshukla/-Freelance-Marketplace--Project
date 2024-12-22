@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   FiVideo,
@@ -20,6 +21,8 @@ const VideoCall = () => {
   const [newMessage, setNewMessage] = useState('');
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
+  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Request camera and microphone permissions
@@ -29,9 +32,11 @@ const VideoCall = () => {
           video: true,
           audio: true
         });
+        
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = stream;
         }
+        setLocalStream(stream);
       } catch (error) {
         console.error('Error accessing media devices:', error);
       }
@@ -39,29 +44,55 @@ const VideoCall = () => {
 
     setupMediaDevices();
 
-    // Cleanup
+    // Cleanup function
     return () => {
-      const stream = localVideoRef.current?.srcObject as MediaStream;
-      stream?.getTracks().forEach(track => track.stop());
+      if (localStream) {
+        localStream.getTracks().forEach(track => {
+          track.stop();
+        });
+      }
     };
   }, []);
 
   const toggleAudio = () => {
-    const stream = localVideoRef.current?.srcObject as MediaStream;
-    const audioTrack = stream?.getAudioTracks()[0];
-    if (audioTrack) {
-      audioTrack.enabled = !isAudioEnabled;
-      setIsAudioEnabled(!isAudioEnabled);
+    if (localStream) {
+      const audioTrack = localStream.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.enabled = !isAudioEnabled;
+        setIsAudioEnabled(!isAudioEnabled);
+      }
     }
   };
 
   const toggleVideo = () => {
-    const stream = localVideoRef.current?.srcObject as MediaStream;
-    const videoTrack = stream?.getVideoTracks()[0];
-    if (videoTrack) {
-      videoTrack.enabled = !isVideoEnabled;
-      setIsVideoEnabled(!isVideoEnabled);
+    if (localStream) {
+      const videoTrack = localStream.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.enabled = !isVideoEnabled;
+        setIsVideoEnabled(!isVideoEnabled);
+      }
     }
+  };
+
+  const endCall = () => {
+    // Stop all tracks in the local stream
+    if (localStream) {
+      localStream.getTracks().forEach(track => {
+        track.stop();
+      });
+      setLocalStream(null);
+    }
+
+    // Clear video elements
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = null;
+    }
+    if (remoteVideoRef.current) {
+      remoteVideoRef.current.srcObject = null;
+    }
+
+    // Navigate back to the previous page
+    navigate(-1);
   };
 
   const handleSendMessage = () => {
@@ -133,6 +164,7 @@ const VideoCall = () => {
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
+                    onClick={endCall}
                     className="p-4 rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors"
                   >
                     <FiPhoneOff size={20} />
