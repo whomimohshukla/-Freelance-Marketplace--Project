@@ -1,7 +1,14 @@
 import React from 'react'
 import { motion } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 
 const Home = () => {
+  const navigate = useNavigate();
+
+  const handleFindTalent = () => {
+    navigate('/features/find-talent');
+  };
+
   return (
     <div className="min-h-screen bg-dark-blue relative overflow-hidden">
       {/* Background Effects */}
@@ -64,7 +71,10 @@ const Home = () => {
               transition={{ duration: 0.6, delay: 0.4 }}
               className="flex flex-col sm:flex-row gap-4 justify-center items-center"
             >
-              <button className="group w-full sm:w-auto bg-code-green hover:bg-accent-hover text-dark-blue px-8 py-3 rounded-lg font-medium transition-all duration-200 hover:shadow-[0_0_20px_rgba(0,245,196,0.3)] relative overflow-hidden">
+              <button 
+                onClick={handleFindTalent}
+                className="group w-full sm:w-auto bg-code-green hover:bg-accent-hover text-dark-blue px-8 py-3 rounded-lg font-medium transition-all duration-200 hover:shadow-[0_0_20px_rgba(0,245,196,0.3)] relative overflow-hidden"
+              >
                 <span className="relative z-10">Find Talent</span>
                 <div className="absolute inset-0 h-full w-0 bg-white/20 transition-all duration-300 group-hover:w-full"></div>
               </button>
