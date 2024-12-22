@@ -7,10 +7,11 @@ import FindTalent from "./components/features/FindTalent";
 import Home from "./pages/Home";
 import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";
-import BecomeFreelancer from './pages/BecomeFreelancer';
-import GuideComponent from './components/features/Guide';
-import HelpCenter from './components/features/HelpCenter';
-import Documentation from './components/features/Documentation';
+import BecomeFreelancer from "./pages/BecomeFreelancer";
+import GuideComponent from "./components/features/Guide";
+import HelpCenter from "./components/features/HelpCenter";
+import Documentation from "./components/features/Documentation";
+import ContactUs from "./components/features/ContactUs";
 
 export const router = createBrowserRouter([
   {
@@ -60,6 +61,10 @@ export const router = createBrowserRouter([
       {
         path: "/documentation/:docId",
         element: <Documentation />,
+      },
+      {
+        path: "/contact",
+        element: <ContactUs />,
       },
     ],
   },
