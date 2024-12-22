@@ -5,6 +5,9 @@ import Footer from './components/layout/Footer'
 import Home from './pages/Home'
 import Login from './pages/Auth/Login'
 import Register from './pages/Auth/Register'
+import SearchProjects from './components/features/SearchProjects'
+import Messaging from './components/features/Messaging'
+import SecurePayments from './components/features/SecurePayments'
 
 function App() {
   return (
@@ -16,6 +19,9 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/features/search" element={<SearchProjects />} />
+            <Route path="/features/messaging" element={<Messaging />} />
+            <Route path="/features/payments" element={<SecurePayments />} />
           </Routes>
         </main>
         <Footer />
