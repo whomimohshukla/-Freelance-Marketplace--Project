@@ -139,43 +139,80 @@ const Navbar = () => {
 
       {/* Mobile menu */}
       <div 
-        className={`md:hidden transition-all duration-300 ease-in-out ${isMenuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4 pointer-events-none'}`}
+        className={`md:hidden fixed inset-x-0 top-[72px] transition-all duration-300 ease-in-out ${isMenuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4 pointer-events-none'}`}
       >
         <div className="relative">
           {/* Backdrop blur and gradient */}
           <div className="absolute inset-0 bg-gray-900/90 backdrop-blur-xl border-t border-gray-800/50"></div>
           
           <div className="relative px-2 pt-2 pb-3 space-y-1">
-            <Link
-              to="/features"
-              className="block px-3 py-2 text-base font-medium text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors"
-            >
-              Features
-            </Link>
-            <Link
-              to="/resources"
-              className="block px-3 py-2 text-base font-medium text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors"
-            >
-              Resources
-            </Link>
+            {/* Features Section */}
+            <div className="space-y-1">
+              <div className="px-3 py-2 text-base font-medium text-gray-300">Features</div>
+              <Link
+                to="/features/search"
+                className="block px-6 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors"
+              >
+                Search Projects
+              </Link>
+              <Link
+                to="/features/messaging"
+                className="block px-6 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors"
+              >
+                Messaging
+              </Link>
+              <Link
+                to="/features/payments"
+                className="block px-6 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors"
+              >
+                Secure Payments
+              </Link>
+            </div>
+
+            {/* Resources Section */}
+            <div className="space-y-1 mt-2">
+              <div className="px-3 py-2 text-base font-medium text-gray-300">Resources</div>
+              <Link
+                to="/resources/blog"
+                className="block px-6 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors"
+              >
+                Blog
+              </Link>
+              <Link
+                to="/resources/guides"
+                className="block px-6 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors"
+              >
+                Guides
+              </Link>
+              <Link
+                to="/resources/help"
+                className="block px-6 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors"
+              >
+                Help Center
+              </Link>
+            </div>
+
             <Link
               to="/pricing"
-              className="block px-3 py-2 text-base font-medium text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors"
+              className="block px-3 py-2 text-base font-medium text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors mt-2"
             >
               Pricing
             </Link>
-            <Link
-              to="/login"
-              className="block px-3 py-2 text-base font-medium text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors"
-            >
-              Sign in
-            </Link>
-            <Link
-              to="/register"
-              className="block px-3 py-2 text-base font-medium text-white bg-code-green hover:bg-code-green/90 rounded-lg transition-colors"
-            >
-              Sign up
-            </Link>
+
+            <div className="pt-4 mt-2 border-t border-gray-800/50">
+              <Link
+                to="/login"
+                className="block px-3 py-2 text-base font-medium text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors"
+              >
+                Sign in
+              </Link>
+              <Link
+                to="/register"
+                className="block px-3 py-2 text-base font-medium text-white bg-code-green hover:bg-code-green/90 rounded-lg transition-colors mt-2"
+              >
+                Sign up
+              </Link>
+            </div>
           </div>
         </div>
       </div>
