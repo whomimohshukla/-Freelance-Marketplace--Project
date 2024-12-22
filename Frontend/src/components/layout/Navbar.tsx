@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import  { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { FiChevronDown } from 'react-icons/fi'
 import { motion } from 'framer-motion'
@@ -55,6 +55,9 @@ const Navbar = () => {
                     </Link>
                     <Link to="/features/messaging" className="block px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors">
                       Messaging
+                    </Link>
+                    <Link to="/features/video-call" className="block px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors">
+                      Video Call
                     </Link>
                     <Link to="/features/payments" className="block px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors">
                       Secure Payments
@@ -160,6 +163,12 @@ const Navbar = () => {
                 className="block px-6 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors"
               >
                 Messaging
+              </Link>
+              <Link
+                to="/features/video-call"
+                className="block px-6 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors"
+              >
+                Video Call
               </Link>
               <Link
                 to="/features/payments"

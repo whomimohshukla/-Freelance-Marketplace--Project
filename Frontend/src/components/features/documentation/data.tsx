@@ -1,5 +1,5 @@
-import React from "react";
-import { DocSection, UserRegistration, ProjectMatch, PaymentProcess } from "./types";
+// import React from "react";
+import { DocSection } from "./types";
 import { CodeBlock } from "./DocContent";
 
 export const documentationSections: DocSection[] = [
