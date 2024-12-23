@@ -14,6 +14,12 @@ import ContactUs from "./components/features/ContactUs";
 import VideoCall from "./components/features/VideoCall";
 import Pricing from "./components/features/Pricing";
 import Messaging from "./components/features/Messaging";
+import CreateProfile from "./pages/CreateProfile";
+import TermsAndServices from "./pages/TermsAndServices";
+import Community from "./pages/Community";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+import CookiePolicy from "./pages/CookiePolicy";
 
 export const router = createBrowserRouter([
   {
@@ -81,9 +87,33 @@ export const router = createBrowserRouter([
         element: <Register />,
       },
       {
-        path:"/features/messaging",
-        element:<Messaging />
-      }
+        path: "/create-profile",
+        element: <CreateProfile />,
+      },
+      {
+        path: "/features/messaging",
+        element: <Messaging />,
+      },
+      {
+        path: "/terms-and-services",
+        element: <TermsAndServices />,
+      },
+      {
+        path: "/community",
+        element: <Community />,
+      },
+      {
+        path: "/privacy-policy",
+        element: <PrivacyPolicy />,
+      },
+      {
+        path: "/terms-of-service",
+        element: <TermsOfService />,
+      },
+      {
+        path: "/cookie-policy",
+        element: <CookiePolicy />,
+      },
     ],
   },
 ]);
