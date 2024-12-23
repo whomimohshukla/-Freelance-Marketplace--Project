@@ -40,14 +40,13 @@ export const createReview = async (
       return next(new ErrorResponse("Project not found", 404));
     }
     if (project.status !== "completed") {
-      return next(
-        new ErrorResponse("Can only review completed projects", 400)
-      );
+      return next(new ErrorResponse("Can only review completed projects", 400));
     }
 
     // Determine review type and reviewee based on user role
     const isClient = project.client.toString() === req.user?._id.toString();
-    const isFreelancer = project.assignedFreelancer?.toString() === req.user?._id.toString();
+    const isFreelancer =
+      project.assignedFreelancer?.toString() === req.user?._id.toString();
 
     if (!isClient && !isFreelancer) {
       return next(
@@ -55,7 +54,9 @@ export const createReview = async (
       );
     }
 
-    const reviewType = isClient ? "client-to-freelancer" : "freelancer-to-client";
+    const reviewType = isClient
+      ? "client-to-freelancer"
+      : "freelancer-to-client";
     const reviewee = isClient ? project.assignedFreelancer : project.client;
 
     // Check for existing review
@@ -75,12 +76,18 @@ export const createReview = async (
     const metrics = req.body.metrics;
     if (reviewType === "client-to-freelancer" && !metrics.deadlineAdherence) {
       return next(
-        new ErrorResponse("Deadline adherence rating is required for freelancer reviews", 400)
+        new ErrorResponse(
+          "Deadline adherence rating is required for freelancer reviews",
+          400
+        )
       );
     }
     if (reviewType === "freelancer-to-client" && !metrics.paymentPromptness) {
       return next(
-        new ErrorResponse("Payment promptness rating is required for client reviews", 400)
+        new ErrorResponse(
+          "Payment promptness rating is required for client reviews",
+          400
+        )
       );
     }
 
@@ -212,6 +219,7 @@ export const getReview = async (
   }
 };
 
+//whomimohshukla
 // @desc    Update review
 // @route   PUT /api/reviews/:id
 // @access  Private (Review owner only)
@@ -241,14 +249,10 @@ export const updateReview = async (
     delete updateData.project;
     delete updateData.type;
 
-    review = await Review.findByIdAndUpdate(
-      req.params.id,
-      updateData,
-      {
-        new: true,
-        runValidators: true,
-      }
-    ).populate([
+    review = await Review.findByIdAndUpdate(req.params.id, updateData, {
+      new: true,
+      runValidators: true,
+    }).populate([
       { path: "reviewer", select: "firstName lastName email profileImage" },
       { path: "reviewee", select: "firstName lastName email profileImage" },
       { path: "project", select: "title" },
@@ -321,7 +325,8 @@ export const deleteReview = async (
     }
 
     // Check if user is review owner or admin
-    const isReviewOwner = review.reviewer.toString() === req.user?._id.toString();
+    const isReviewOwner =
+      review.reviewer.toString() === req.user?._id.toString();
     const isAdmin = req.user?.role === "admin";
 
     if (!isReviewOwner && !isAdmin) {

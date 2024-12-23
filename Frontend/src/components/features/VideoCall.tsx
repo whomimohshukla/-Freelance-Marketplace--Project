@@ -17,15 +17,17 @@ const VideoCall = () => {
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [messages, setMessages] = useState<{ sender: string; text: string; time: string }[]>([]);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [messages, setMessages] = useState<{ text: string; time: string }[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Request camera and microphone permissions
     const setupMediaDevices = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -44,7 +46,6 @@ const VideoCall = () => {
 
     setupMediaDevices();
 
-    // Cleanup function
     return () => {
       if (localStream) {
         localStream.getTracks().forEach(track => {
@@ -74,8 +75,60 @@ const VideoCall = () => {
     }
   };
 
+  const toggleFullScreen = async () => {
+    if (!document.fullscreenElement) {
+      try {
+        await containerRef.current?.requestFullscreen();
+        setIsFullScreen(true);
+      } catch (err) {
+        console.error('Error attempting to enable full-screen mode:', err);
+      }
+    } else {
+      await document.exitFullscreen();
+      setIsFullScreen(false);
+    }
+  };
+
+  const shareScreen = async () => {
+    try {
+      const screenStream = await navigator.mediaDevices.getDisplayMedia({
+        video: true
+      });
+      
+      if (localVideoRef.current) {
+        // Stop current video track
+        localStream?.getVideoTracks().forEach(track => track.stop());
+        
+        // Replace video track with screen share track
+        const newStream = new MediaStream([
+          ...localStream?.getAudioTracks() || [],
+          screenStream.getVideoTracks()[0]
+        ]);
+        
+        localVideoRef.current.srcObject = newStream;
+        setLocalStream(newStream);
+        
+        // Listen for when user stops screen sharing
+        screenStream.getVideoTracks()[0].onended = async () => {
+          const newCameraStream = await navigator.mediaDevices.getUserMedia({
+            video: true
+          });
+          
+          const revertedStream = new MediaStream([
+            ...localStream?.getAudioTracks() || [],
+            newCameraStream.getVideoTracks()[0]
+          ]);
+          
+          localVideoRef.current!.srcObject = revertedStream;
+          setLocalStream(revertedStream);
+        };
+      }
+    } catch (error) {
+      console.error('Error sharing screen:', error);
+    }
+  };
+
   const endCall = () => {
-    // Stop all tracks in the local stream
     if (localStream) {
       localStream.getTracks().forEach(track => {
         track.stop();
@@ -83,7 +136,6 @@ const VideoCall = () => {
       setLocalStream(null);
     }
 
-    // Clear video elements
     if (localVideoRef.current) {
       localVideoRef.current.srcObject = null;
     }
@@ -91,20 +143,28 @@ const VideoCall = () => {
       remoteVideoRef.current.srcObject = null;
     }
 
-    // Navigate back to the previous page
     navigate(-1);
   };
 
   const handleSendMessage = () => {
     if (newMessage.trim()) {
-      const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      setMessages([...messages, { sender: 'You', text: newMessage, time }]);
+      const now = new Date();
+      const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      
+      setMessages(prev => [...prev, { text: newMessage, time: timeString }]);
       setNewMessage('');
     }
   };
 
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-900 pt-24">
+    <div className="min-h-screen bg-gray-900 pt-24" ref={containerRef}>
       {/* Background Patterns */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px)] bg-[size:64px] opacity-5"></div>
@@ -182,6 +242,7 @@ const VideoCall = () => {
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
+                    onClick={shareScreen}
                     className="p-4 rounded-full bg-gray-800 text-white hover:opacity-90 transition-colors"
                   >
                     <FiShare2 size={20} />
@@ -190,6 +251,7 @@ const VideoCall = () => {
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
+                    onClick={toggleFullScreen}
                     className="p-4 rounded-full bg-gray-800 text-white hover:opacity-90 transition-colors"
                   >
                     <FiMaximize size={20} />
@@ -198,6 +260,7 @@ const VideoCall = () => {
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
+                    onClick={() => setIsSettingsOpen(!isSettingsOpen)}
                     className="p-4 rounded-full bg-gray-800 text-white hover:opacity-90 transition-colors"
                   >
                     <FiSettings size={20} />
@@ -221,17 +284,12 @@ const VideoCall = () => {
                   
                   {/* Messages */}
                   <div className="flex-grow overflow-y-auto mb-4 space-y-4">
-                    {messages.map((message, index) => (
+                    {messages.map((msg, index) => (
                       <div key={index} className="flex flex-col">
-                        <div className="flex items-baseline justify-between mb-1">
-                          <span className="text-sm font-medium text-code-green">
-                            {message.sender}
-                          </span>
-                          <span className="text-xs text-gray-500">{message.time}</span>
+                        <div className="bg-gray-800/50 rounded-lg p-3">
+                          <p className="text-white">{msg.text}</p>
+                          <span className="text-xs text-gray-400">{msg.time}</span>
                         </div>
-                        <p className="text-gray-300 bg-gray-800/50 rounded-lg p-3">
-                          {message.text}
-                        </p>
                       </div>
                     ))}
                   </div>
@@ -242,16 +300,66 @@ const VideoCall = () => {
                       type="text"
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                      onKeyPress={handleKeyPress}
                       placeholder="Type a message..."
                       className="flex-grow px-4 py-2 bg-gray-800/50 border border-gray-700/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-code-green/50 focus:border-transparent"
                     />
                     <button
                       onClick={handleSendMessage}
-                      className="px-4 py-2 bg-code-green text-gray-900 rounded-lg font-medium hover:bg-code-green/90 transition-colors"
+                      className="px-4 py-2 bg-code-green text-gray-900 rounded-lg hover:bg-code-green/90 transition-colors"
                     >
                       Send
                     </button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Settings Panel */}
+          {isSettingsOpen && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 z-50"
+            >
+              <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-code-green/20 to-transparent p-[1px]">
+                <div className="relative bg-gray-900/90 backdrop-blur-xl p-6 rounded-[11px]">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-medium text-white">Settings</h3>
+                    <button
+                      onClick={() => setIsSettingsOpen(false)}
+                      className="text-gray-400 hover:text-white"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-2">
+                        Camera
+                      </label>
+                      <select className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white">
+                        <option>Default Camera</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-2">
+                        Microphone
+                      </label>
+                      <select className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white">
+                        <option>Default Microphone</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-2">
+                        Speaker
+                      </label>
+                      <select className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white">
+                        <option>Default Speaker</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
               </div>
