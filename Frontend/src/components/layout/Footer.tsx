@@ -1,4 +1,4 @@
-import React from 'react'
+// import React from 'react'
 import { motion } from 'framer-motion'
 
 function Footer() {
@@ -75,13 +75,13 @@ function Footer() {
                 </a>
               </motion.li>
               <motion.li whileHover={{ x: 5 }} transition={{ duration: 0.2 }}>
-                <a href="#" className="text-gray-400 hover:text-code-green text-sm transition-colors flex items-center space-x-2">
+                <a href="/create-profile" className="text-gray-400 hover:text-code-green text-sm transition-colors flex items-center space-x-2">
                   <span className="w-1 h-1 bg-code-green rounded-full"></span>
                   <span>Create Profile</span>
                 </a>
               </motion.li>
               <motion.li whileHover={{ x: 5 }} transition={{ duration: 0.2 }}>
-                <a href="#" className="text-gray-400 hover:text-code-green text-sm transition-colors flex items-center space-x-2">
+                <a href="/community" className="text-gray-400 hover:text-code-green text-sm transition-colors flex items-center space-x-2">
                   <span className="w-1 h-1 bg-code-green rounded-full"></span>
                   <span>Community</span>
                 </a>
@@ -97,7 +97,7 @@ function Footer() {
             </h4>
             <ul className="space-y-3">
               <motion.li whileHover={{ x: 5 }} transition={{ duration: 0.2 }}>
-                <a href="#" className="text-gray-400 hover:text-code-green text-sm transition-colors flex items-center space-x-2">
+                <a href="/resources/help" className="text-gray-400 hover:text-code-green text-sm transition-colors flex items-center space-x-2">
                   <span className="w-1 h-1 bg-code-green rounded-full"></span>
                   <span>Help & Support</span>
                 </a>
@@ -109,7 +109,7 @@ function Footer() {
                 </a>
               </motion.li>
               <motion.li whileHover={{ x: 5 }} transition={{ duration: 0.2 }}>
-                <a href="#" className="text-gray-400 hover:text-code-green text-sm transition-colors flex items-center space-x-2">
+                <a href="/terms-and-services" className="text-gray-400 hover:text-code-green text-sm transition-colors flex items-center space-x-2">
                   <span className="w-1 h-1 bg-code-green rounded-full"></span>
                   <span>Terms of Service</span>
                 </a>
@@ -125,9 +125,9 @@ function Footer() {
               &copy; 2024 SkillBridge. All rights reserved.
             </p>
             <div className="mt-4 md:mt-0">
-              <a href="#" className="text-gray-400 hover:text-code-green text-sm transition-colors mx-3">Privacy Policy</a>
-              <a href="#" className="text-gray-400 hover:text-code-green text-sm transition-colors mx-3">Terms of Use</a>
-              <a href="#" className="text-gray-400 hover:text-code-green text-sm transition-colors mx-3">Cookie Policy</a>
+              <a href="/privacy-policy" className="text-gray-400 hover:text-code-green text-sm transition-colors mx-3">Privacy Policy</a>
+              <a href="/terms-of-service" className="text-gray-400 hover:text-code-green text-sm transition-colors mx-3">Terms of Service</a>
+              <a href="/cookie-policy" className="text-gray-400 hover:text-code-green text-sm transition-colors mx-3">Cookie Policy</a>
             </div>
           </div>
         </div>
