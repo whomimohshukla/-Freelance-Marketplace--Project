@@ -13,6 +13,7 @@ import Documentation from "./components/features/Documentation";
 import ContactUs from "./components/features/ContactUs";
 import VideoCall from "./components/features/VideoCall";
 import Pricing from "./components/features/Pricing";
+import Messaging from "./components/features/Messaging";
 
 export const router = createBrowserRouter([
   {
@@ -79,6 +80,10 @@ export const router = createBrowserRouter([
         path: "/register",
         element: <Register />,
       },
+      {
+        path:"/features/messaging",
+        element:<Messaging />
+      }
     ],
   },
 ]);
