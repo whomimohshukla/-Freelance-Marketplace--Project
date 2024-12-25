@@ -23,6 +23,8 @@ interface Contact {
   unread: number;
 }
 
+// messaging interface
+
 const Messaging = () => {
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [message, setMessage] = useState('');
