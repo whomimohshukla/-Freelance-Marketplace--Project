@@ -4,14 +4,14 @@ import { Link } from 'react-router-dom';
 import {
   FiMessageSquare,
   FiVideo,
-  FiUser,
+  // FiUser,
   FiSearch,
   FiMoreVertical,
   FiSend,
   FiPaperclip,
   FiSmile,
   FiPhone,
-  FiVideoOff
+  // FiVideoOff
 } from 'react-icons/fi';
 
 interface Contact {
