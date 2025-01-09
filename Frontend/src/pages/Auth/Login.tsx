@@ -20,7 +20,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Animated background elements */}
+      
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,#00f5c410,transparent_50%)]"></div>
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px)] bg-[size:64px] bg-opacity-20"></div>
@@ -29,7 +29,7 @@ const Login = () => {
       </div>
       
       <div className="relative max-w-md w-full">
-        {/* Glowing orb effects */}
+        
         <div className="absolute -top-20 -right-20 w-64 h-64 bg-code-green/10 rounded-full blur-3xl"></div>
         <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-code-green/10 rounded-full blur-3xl"></div>
         
