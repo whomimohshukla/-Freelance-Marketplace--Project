@@ -22,11 +22,9 @@ const Register = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle registration logic here
   }
 
   const handleSocialSignup = (provider: string) => {
-    // Handle social signup logic here
     console.log(`Signing up with ${provider}`)
   }
 
