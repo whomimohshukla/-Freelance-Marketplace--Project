@@ -1,3 +1,5 @@
+
+//community 
 function Community() {
   return (
     <div className="min-h-screen bg-gray-900 text-white py-24 px-6">
