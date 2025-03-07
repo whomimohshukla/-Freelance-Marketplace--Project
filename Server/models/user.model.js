@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 
+
+//we need to add the following to the user schema to make it work 
 const userSchema = new mongoose.Schema(
   {
     email: {
