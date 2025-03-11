@@ -4,6 +4,11 @@ const useControllers = require("../controllers/user.controller");
 const socialAuthController = require("../controllers/socialAuth.controller");
 const authMiddleware = require("../middleware/auth.middleware");
 
+
+
+//otp routes
+userRoutes.post("/send-otp", useControllers.sendOTP);
+userRoutes.post("/resend-otp", useControllers.resendOTP);
 // Auth routes
 userRoutes.post("/signup", useControllers.signup);
 userRoutes.post("/login", useControllers.login);
