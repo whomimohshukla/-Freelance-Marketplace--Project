@@ -1,4 +1,4 @@
-const validatePassword = (password) => {
+exports.validatePassword = (password) => {
     // Password must be at least 8 characters long and contain:
     // - At least one uppercase letter
     // - At least one lowercase letter
@@ -8,6 +8,3 @@ const validatePassword = (password) => {
     return passwordRegex.test(password);
 };
 
-module.exports = {
-    validatePassword
-};
