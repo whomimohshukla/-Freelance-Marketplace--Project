@@ -1,6 +1,8 @@
 const ClientProfile = require('../models/client.model');
-const User = require('../models/user.model');
 const mongoose = require('mongoose');
+
+// Helper function to validate ObjectId
+const isValidObjectId = (id) => mongoose.isValidObjectId(id);
 
 // Search Clients
 exports.searchClients = async (req, res) => {
@@ -17,7 +19,7 @@ exports.searchClients = async (req, res) => {
         const query = {};
 
         if (industry) {
-            if (!mongoose.isValidObjectId(industry)) {
+            if (!isValidObjectId(industry)) {
                 return res.status(400).json({
                     success: false,
                     error: 'Invalid industry ID format'
@@ -73,13 +75,32 @@ exports.createOrUpdateProfile = async (req, res) => {
         const userId = req.user.id;
         const updateData = { ...req.body };
 
-        // Convert ObjectIds
-        if (updateData.industry) {
-            updateData.industry = new mongoose.Types.ObjectId(updateData.industry);
+        if (!isValidObjectId(userId)) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid user ID format'
+            });
         }
+
+        // Validate ObjectIds in updateData
+        if (updateData.industry && !isValidObjectId(updateData.industry)) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid industry ID format'
+            });
+        }
+
         if (updateData.hiring?.preferredSkills) {
-            updateData.hiring.preferredSkills = updateData.hiring.preferredSkills
-                .map(skillId => new mongoose.Types.ObjectId(skillId));
+            const invalidSkills = updateData.hiring.preferredSkills.filter(id => !isValidObjectId(id));
+            if (invalidSkills.length > 0) {
+                return res.status(400).json({
+                    success: false,
+                    error: `Invalid skill IDs: ${invalidSkills.join(', ')}`
+                });
+            }
+            updateData.hiring.preferredSkills = updateData.hiring.preferredSkills.map(id => 
+                new mongoose.Types.ObjectId(id)
+            );
         }
 
         let profile = await ClientProfile.findOne({ user: userId });
@@ -89,11 +110,11 @@ exports.createOrUpdateProfile = async (req, res) => {
                 { user: userId },
                 { $set: updateData },
                 { new: true, runValidators: true }
-            ).populate(['industry', 'hiring.preferredSkills']);
+            ).populate(['user', 'industry', 'hiring.preferredSkills', 'projects.active', 'projects.completed']);
         } else {
-            updateData.user = userId;
+            updateData.user = new mongoose.Types.ObjectId(userId);
             profile = await ClientProfile.create(updateData);
-            profile = await profile.populate(['industry', 'hiring.preferredSkills']);
+            await profile.populate(['user', 'industry', 'hiring.preferredSkills']);
         }
 
         res.status(200).json({
@@ -111,7 +132,16 @@ exports.createOrUpdateProfile = async (req, res) => {
 // Get Client Profile
 exports.getProfile = async (req, res) => {
     try {
-        const profile = await ClientProfile.findOne({ user: req.params.userId })
+        const { userId } = req.params;
+
+        if (!isValidObjectId(userId)) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid user ID format'
+            });
+        }
+
+        const profile = await ClientProfile.findOne({ user: new mongoose.Types.ObjectId(userId) })
             .populate('user', 'firstName lastName email avatar')
             .populate('industry')
             .populate('hiring.preferredSkills')
@@ -144,11 +174,25 @@ exports.updateCompany = async (req, res) => {
         const userId = req.user.id;
         const { company } = req.body;
 
+        if (!isValidObjectId(userId)) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid user ID format'
+            });
+        }
+
         const profile = await ClientProfile.findOneAndUpdate(
-            { user: userId },
+            { user: new mongoose.Types.ObjectId(userId) },
             { $set: { company } },
             { new: true, runValidators: true }
         );
+
+        if (!profile) {
+            return res.status(404).json({
+                success: false,
+                error: 'Client profile not found'
+            });
+        }
 
         res.status(200).json({
             success: true,
@@ -168,68 +212,29 @@ exports.updateBusinessDetails = async (req, res) => {
         const userId = req.user.id;
         const { businessDetails } = req.body;
 
+        if (!isValidObjectId(userId)) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid user ID format'
+            });
+        }
+
         const profile = await ClientProfile.findOneAndUpdate(
-            { user: userId },
+            { user: new mongoose.Types.ObjectId(userId) },
             { $set: { businessDetails } },
             { new: true, runValidators: true }
         );
 
+        if (!profile) {
+            return res.status(404).json({
+                success: false,
+                error: 'Client profile not found'
+            });
+        }
+
         res.status(200).json({
             success: true,
             data: profile.businessDetails
-        });
-    } catch (error) {
-        res.status(400).json({
-            success: false,
-            error: error.message
-        });
-    }
-};
-
-// Update Hiring Preferences
-exports.updateHiring = async (req, res) => {
-    try {
-        const userId = req.user.id;
-        const hiring = { ...req.body.hiring };
-
-        if (hiring.preferredSkills) {
-            hiring.preferredSkills = hiring.preferredSkills
-                .map(skillId => new mongoose.Types.ObjectId(skillId));
-        }
-
-        const profile = await ClientProfile.findOneAndUpdate(
-            { user: userId },
-            { $set: { hiring } },
-            { new: true, runValidators: true }
-        ).populate('hiring.preferredSkills');
-
-        res.status(200).json({
-            success: true,
-            data: profile.hiring
-        });
-    } catch (error) {
-        res.status(400).json({
-            success: false,
-            error: error.message
-        });
-    }
-};
-
-// Update Financial Information
-exports.updateFinancials = async (req, res) => {
-    try {
-        const userId = req.user.id;
-        const { financials } = req.body;
-
-        const profile = await ClientProfile.findOneAndUpdate(
-            { user: userId },
-            { $set: { financials } },
-            { new: true, runValidators: true }
-        );
-
-        res.status(200).json({
-            success: true,
-            data: profile.financials
         });
     } catch (error) {
         res.status(400).json({
@@ -245,20 +250,32 @@ exports.addTeamMember = async (req, res) => {
         const userId = req.user.id;
         const { teamMember } = req.body;
 
-        if (!mongoose.isValidObjectId(teamMember.user)) {
+        if (!isValidObjectId(userId) || !isValidObjectId(teamMember.user)) {
             return res.status(400).json({
                 success: false,
                 error: 'Invalid user ID format'
             });
         }
 
-        teamMember.user = new mongoose.Types.ObjectId(teamMember.user);
-
         const profile = await ClientProfile.findOneAndUpdate(
-            { user: userId },
-            { $push: { team: teamMember } },
+            { user: new mongoose.Types.ObjectId(userId) },
+            { 
+                $push: { 
+                    team: {
+                        ...teamMember,
+                        user: new mongoose.Types.ObjectId(teamMember.user)
+                    }
+                }
+            },
             { new: true, runValidators: true }
         ).populate('team.user', 'firstName lastName email avatar');
+
+        if (!profile) {
+            return res.status(404).json({
+                success: false,
+                error: 'Client profile not found'
+            });
+        }
 
         res.status(200).json({
             success: true,
@@ -276,13 +293,27 @@ exports.addTeamMember = async (req, res) => {
 exports.removeTeamMember = async (req, res) => {
     try {
         const userId = req.user.id;
-        const { teamMemberId } = req.params;
+        const { memberId } = req.params;
+
+        if (!isValidObjectId(userId) || !isValidObjectId(memberId)) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid ID format'
+            });
+        }
 
         const profile = await ClientProfile.findOneAndUpdate(
-            { user: userId },
-            { $pull: { team: { _id: teamMemberId } } },
+            { user: new mongoose.Types.ObjectId(userId) },
+            { $pull: { team: { _id: new mongoose.Types.ObjectId(memberId) } } },
             { new: true }
         ).populate('team.user', 'firstName lastName email avatar');
+
+        if (!profile) {
+            return res.status(404).json({
+                success: false,
+                error: 'Client profile not found'
+            });
+        }
 
         res.status(200).json({
             success: true,
@@ -296,69 +327,35 @@ exports.removeTeamMember = async (req, res) => {
     }
 };
 
-// Update Stats
-exports.updateStats = async (req, res) => {
+// Update Financials
+exports.updateFinancials = async (req, res) => {
     try {
         const userId = req.user.id;
-        const { stats } = req.body;
+        const { financials } = req.body;
+
+        if (!isValidObjectId(userId)) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid user ID format'
+            });
+        }
 
         const profile = await ClientProfile.findOneAndUpdate(
-            { user: userId },
-            { $set: { stats } },
+            { user: new mongoose.Types.ObjectId(userId) },
+            { $set: { financials } },
             { new: true, runValidators: true }
         );
 
-        res.status(200).json({
-            success: true,
-            data: profile.stats
-        });
-    } catch (error) {
-        res.status(400).json({
-            success: false,
-            error: error.message
-        });
-    }
-};
-
-// Update Social Profiles
-exports.updateSocialProfiles = async (req, res) => {
-    try {
-        const userId = req.user.id;
-        const { socialProfiles } = req.body;
-
-        const profile = await ClientProfile.findOneAndUpdate(
-            { user: userId },
-            { $set: { socialProfiles } },
-            { new: true, runValidators: true }
-        );
+        if (!profile) {
+            return res.status(404).json({
+                success: false,
+                error: 'Client profile not found'
+            });
+        }
 
         res.status(200).json({
             success: true,
-            data: profile.socialProfiles
-        });
-    } catch (error) {
-        res.status(400).json({
-            success: false,
-            error: error.message
-        });
-    }
-};
-
-// Update Preferences
-exports.updatePreferences = async (req, res) => {
-    try {
-        const userId = req.user.id;
-        const { preferences } = req.body;
-
-        const profile = await ClientProfile.findOneAndUpdate(
-            { user: userId },
-            { $set: { preferences } },
-            { new: true, runValidators: true }
-        );
-
-        res.status(200).json({
-            success: true,
-            data: profile.preferences
+            data: profile.financials
         });
     } catch (error) {
         res.status(400).json({
@@ -374,11 +371,25 @@ exports.addPaymentMethod = async (req, res) => {
         const userId = req.user.id;
         const { paymentMethod } = req.body;
 
+        if (!isValidObjectId(userId)) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid user ID format'
+            });
+        }
+
         const profile = await ClientProfile.findOneAndUpdate(
-            { user: userId },
+            { user: new mongoose.Types.ObjectId(userId) },
             { $push: { 'financials.paymentMethods': paymentMethod } },
             { new: true, runValidators: true }
         );
+
+        if (!profile) {
+            return res.status(404).json({
+                success: false,
+                error: 'Client profile not found'
+            });
+        }
 
         res.status(200).json({
             success: true,
@@ -396,17 +407,69 @@ exports.addPaymentMethod = async (req, res) => {
 exports.removePaymentMethod = async (req, res) => {
     try {
         const userId = req.user.id;
-        const { paymentMethodId } = req.params;
+        const { methodId } = req.params;
+
+        if (!isValidObjectId(userId) || !isValidObjectId(methodId)) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid ID format'
+            });
+        }
 
         const profile = await ClientProfile.findOneAndUpdate(
-            { user: userId },
-            { $pull: { 'financials.paymentMethods': { _id: paymentMethodId } } },
+            { user: new mongoose.Types.ObjectId(userId) },
+            { $pull: { 'financials.paymentMethods': { _id: new mongoose.Types.ObjectId(methodId) } } },
             { new: true }
         );
+
+        if (!profile) {
+            return res.status(404).json({
+                success: false,
+                error: 'Client profile not found'
+            });
+        }
 
         res.status(200).json({
             success: true,
             data: profile.financials.paymentMethods
+        });
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            error: error.message
+        });
+    }
+};
+
+// Update Stats
+exports.updateStats = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { stats } = req.body;
+
+        if (!isValidObjectId(userId)) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid user ID format'
+            });
+        }
+
+        const profile = await ClientProfile.findOneAndUpdate(
+            { user: new mongoose.Types.ObjectId(userId) },
+            { $set: { stats } },
+            { new: true, runValidators: true }
+        );
+
+        if (!profile) {
+            return res.status(404).json({
+                success: false,
+                error: 'Client profile not found'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: profile.stats
         });
     } catch (error) {
         res.status(400).json({
