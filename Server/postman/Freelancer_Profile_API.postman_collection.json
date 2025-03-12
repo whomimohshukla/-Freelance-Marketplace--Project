@@ -1,0 +1,349 @@
+{
+	"info": {
+		"_postman_id": "f8e2b3a1-5c4d-4b3e-8d9a-9f9b9f9b9f9b",
+		"name": "Freelancer Profile API",
+		"description": "API endpoints for managing freelancer profiles",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Create/Update Profile",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer ",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"title\": \"Senior Full Stack Developer\",\n    \"bio\": \"Experienced developer with 5+ years in web development\",\n    \"hourlyRate\": 50,\n    \"skills\": [\n        {\n            \"skill\": \"{{skillId}}\",\n            \"experienceLevel\": \"Expert\",\n            \"yearsOfExperience\": 5\n        }\n    ],\n    \"availability\": {\n        \"status\": \"Available\",\n        \"hoursPerWeek\": 40,\n        \"timezone\": \"UTC+5:30\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/freelancers/profile",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "freelancers", "profile"]
+				}
+			}
+		},
+		{
+			"name": "Get Profile",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/freelancers/profile/{{userId}}",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "freelancers", "profile", "{{userId}}"]
+				}
+			}
+		},
+		{
+			"name": "Add Portfolio Item",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "{{authToken}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"portfolioItem\": {\n        \"title\": \"E-commerce Platform\",\n        \"description\": \"Built a full-stack e-commerce platform\",\n        \"projectUrl\": \"https://example.com\",\n        \"images\": [\n            {\n                \"url\": \"https://example.com/image1.jpg\",\n                \"caption\": \"Homepage\"\n            }\n        ],\n        \"technologies\": [\"React\", \"Node.js\", \"MongoDB\"],\n        \"completionDate\": \"2024-01-15\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/freelancers/portfolio",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "freelancers", "portfolio"]
+				}
+			}
+		},
+		{
+			"name": "Delete Portfolio Item",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "{{authToken}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/freelancers/portfolio/{{portfolioId}}",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "freelancers", "portfolio", "{{portfolioId}}"]
+				}
+			}
+		},
+		{
+			"name": "Update Skills",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "{{authToken}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"skills\": [\n        {\n            \"skill\": \"{{skillId}}\",\n            \"experienceLevel\": \"Expert\",\n            \"yearsOfExperience\": 5\n        }\n    ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/freelancers/skills",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "freelancers", "skills"]
+				}
+			}
+		},
+		{
+			"name": "Add Work Experience",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "{{authToken}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"workExperience\": {\n        \"company\": \"Tech Corp\",\n        \"position\": \"Senior Developer\",\n        \"description\": \"Led development team of 5\",\n        \"startDate\": \"2020-01-01\",\n        \"current\": true,\n        \"achievements\": [\"Increased performance by 50%\"]\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/freelancers/work-experience",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "freelancers", "work-experience"]
+				}
+			}
+		},
+		{
+			"name": "Add Education",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "{{authToken}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"education\": {\n        \"institution\": \"University of Technology\",\n        \"degree\": \"Bachelor's\",\n        \"field\": \"Computer Science\",\n        \"startDate\": \"2016-09-01\",\n        \"endDate\": \"2020-05-31\",\n        \"current\": false,\n        \"description\": \"Major in Software Engineering\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/freelancers/education",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "freelancers", "education"]
+				}
+			}
+		},
+		{
+			"name": "Add Certification",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "{{authToken}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"certification\": {\n        \"name\": \"AWS Certified Developer\",\n        \"issuer\": \"Amazon Web Services\",\n        \"issueDate\": \"2024-01-01\",\n        \"expiryDate\": \"2027-01-01\",\n        \"credentialUrl\": \"https://aws.amazon.com/certification/verify\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/freelancers/certifications",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "freelancers", "certifications"]
+				}
+			}
+		},
+		{
+			"name": "Update Availability",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "{{authToken}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"availability\": {\n        \"status\": \"Available\",\n        \"hoursPerWeek\": 40,\n        \"timezone\": \"UTC+5:30\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/freelancers/availability",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "freelancers", "availability"]
+				}
+			}
+		},
+		{
+			"name": "Search Freelancers",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/freelancers/search?skills=67d08b35f771d9a95f99d2dd&hourlyRateMin=20&hourlyRateMax=100&availability=Available&rating=4&page=1&limit=10",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "freelancers", "search"],
+					"query": [
+						{
+							"key": "skills",
+							"value": "{{skillId}}"
+						},
+						{
+							"key": "hourlyRateMin",
+							"value": "20"
+						},
+						{
+							"key": "hourlyRateMax",
+							"value": "100"
+						},
+						{
+							"key": "availability",
+							"value": "Available"
+						},
+						{
+							"key": "rating",
+							"value": "4"
+						},
+						{
+							"key": "page",
+							"value": "1"
+						},
+						{
+							"key": "limit",
+							"value": "10"
+						}
+					]
+				}
+			}
+		},
+		{
+			"name": "Update Stats",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "{{authToken}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"stats\": {\n        \"totalEarnings\": 50000,\n        \"completedProjects\": 25,\n        \"ongoingProjects\": 3,\n        \"successRate\": 95\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/freelancers/stats",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "freelancers", "stats"]
+				}
+			}
+		},
+		{
+			"name": "Update Social Profiles",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "{{authToken}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"socialProfiles\": {\n        \"github\": \"https://github.com/username\",\n        \"linkedin\": \"https://linkedin.com/in/username\",\n        \"website\": \"https://portfolio.com\",\n        \"stackoverflow\": \"https://stackoverflow.com/users/123456\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/freelancers/social",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "freelancers", "social"]
+				}
+			}
+		},
+		{
+			"name": "Get Top Rated Freelancers",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/freelancers/top-rated?limit=5",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "freelancers", "top-rated"],
+					"query": [
+						{
+							"key": "limit",
+							"value": "5"
+						}
+					]
+				}
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5000"
+		}
+	]
+}

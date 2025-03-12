@@ -1,0 +1,380 @@
+{
+    "info": {
+        "_postman_id": "f9e2b3a1-5c4d-4b3e-8d9a-9f9b9f9b9f9c",
+        "name": "Client Profile API",
+        "description": "API endpoints for managing client profiles",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Create/Update Profile",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{authToken}}",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"company\": {\n        \"name\": \"Tech Solutions Inc\",\n        \"website\": \"https://techsolutions.com\",\n        \"size\": \"11-50\",\n        \"founded\": \"2020-01-01\",\n        \"description\": \"Leading tech solutions provider\",\n        \"logo\": \"https://example.com/logo.png\"\n    },\n    \"industry\": \"{{industryId}}\",\n    \"businessDetails\": {\n        \"type\": \"SME\",\n        \"registrationNumber\": \"REG123456\",\n        \"taxId\": \"TAX123456\"\n    },\n    \"hiring\": {\n        \"preferredSkills\": [\"{{skillId}}\"],\n        \"teamSize\": {\n            \"current\": 10,\n            \"target\": 15\n        },\n        \"locations\": [\"Remote\", \"New York\"]\n    },\n    \"preferences\": {\n        \"communicationChannel\": \"Email\",\n        \"timezone\": \"UTC+5:30\",\n        \"currency\": \"USD\",\n        \"language\": \"English\"\n    }\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "url": {
+                    "raw": "{{baseUrl}}/api/clients/profile",
+                    "host": ["{{baseUrl}}"],
+                    "path": ["api", "clients", "profile"]
+                }
+            }
+        },
+        {
+            "name": "Get Profile",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{baseUrl}}/api/clients/profile/{{userId}}",
+                    "host": ["{{baseUrl}}"],
+                    "path": ["api", "clients", "profile", "{{userId}}"]
+                }
+            }
+        },
+        {
+            "name": "Search Clients",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{baseUrl}}/api/clients/search?industry={{industryId}}&businessType=SME&minRating=4&page=1&limit=10",
+                    "host": ["{{baseUrl}}"],
+                    "path": ["api", "clients", "search"],
+                    "query": [
+                        {
+                            "key": "industry",
+                            "value": "{{industryId}}"
+                        },
+                        {
+                            "key": "businessType",
+                            "value": "SME"
+                        },
+                        {
+                            "key": "minRating",
+                            "value": "4"
+                        },
+                        {
+                            "key": "page",
+                            "value": "1"
+                        },
+                        {
+                            "key": "limit",
+                            "value": "10"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Get Top Clients",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{baseUrl}}/api/clients/top?limit=5",
+                    "host": ["{{baseUrl}}"],
+                    "path": ["api", "clients", "top"],
+                    "query": [
+                        {
+                            "key": "limit",
+                            "value": "5"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Update Company",
+            "request": {
+                "method": "PUT",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{authToken}}",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"company\": {\n        \"name\": \"Tech Solutions Inc\",\n        \"website\": \"https://techsolutions.com\",\n        \"size\": \"11-50\",\n        \"founded\": \"2020-01-01\",\n        \"description\": \"Leading tech solutions provider\",\n        \"logo\": \"https://example.com/logo.png\"\n    }\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "url": {
+                    "raw": "{{baseUrl}}/api/clients/company",
+                    "host": ["{{baseUrl}}"],
+                    "path": ["api", "clients", "company"]
+                }
+            }
+        },
+        {
+            "name": "Update Business Details",
+            "request": {
+                "method": "PUT",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{authToken}}",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"businessDetails\": {\n        \"type\": \"SME\",\n        \"registrationNumber\": \"REG123456\",\n        \"taxId\": \"TAX123456\",\n        \"verificationStatus\": \"Pending\"\n    }\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "url": {
+                    "raw": "{{baseUrl}}/api/clients/business-details",
+                    "host": ["{{baseUrl}}"],
+                    "path": ["api", "clients", "business-details"]
+                }
+            }
+        },
+        {
+            "name": "Update Hiring",
+            "request": {
+                "method": "PUT",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{authToken}}",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"hiring\": {\n        \"preferredSkills\": [\"{{skillId}}\"],\n        \"teamSize\": {\n            \"current\": 10,\n            \"target\": 15\n        },\n        \"locations\": [\"Remote\", \"New York\"]\n    }\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "url": {
+                    "raw": "{{baseUrl}}/api/clients/hiring",
+                    "host": ["{{baseUrl}}"],
+                    "path": ["api", "clients", "hiring"]
+                }
+            }
+        },
+        {
+            "name": "Update Financials",
+            "request": {
+                "method": "PUT",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{authToken}}",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"financials\": {\n        \"totalSpent\": 50000,\n        \"activeProjectsBudget\": 20000,\n        \"billingAddress\": {\n            \"street\": \"123 Main St\",\n            \"city\": \"New York\",\n            \"state\": \"NY\",\n            \"country\": \"USA\",\n            \"zipCode\": \"10001\"\n        }\n    }\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "url": {
+                    "raw": "{{baseUrl}}/api/clients/financials",
+                    "host": ["{{baseUrl}}"],
+                    "path": ["api", "clients", "financials"]
+                }
+            }
+        },
+        {
+            "name": "Add Team Member",
+            "request": {
+                "method": "PUT",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{authToken}}",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"teamMember\": {\n        \"user\": \"{{teamMemberId}}\",\n        \"role\": \"Project Manager\",\n        \"permissions\": [\"View\", \"Edit\", \"Hire\"]\n    }\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "url": {
+                    "raw": "{{baseUrl}}/api/clients/team",
+                    "host": ["{{baseUrl}}"],
+                    "path": ["api", "clients", "team"]
+                }
+            }
+        },
+        {
+            "name": "Remove Team Member",
+            "request": {
+                "method": "DELETE",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{authToken}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{baseUrl}}/api/clients/team/{{teamMemberId}}",
+                    "host": ["{{baseUrl}}"],
+                    "path": ["api", "clients", "team", "{{teamMemberId}}"]
+                }
+            }
+        },
+        {
+            "name": "Add Payment Method",
+            "request": {
+                "method": "PUT",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{authToken}}",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"paymentMethod\": {\n        \"type\": \"Credit Card\",\n        \"isDefault\": true,\n        \"lastFour\": \"4242\",\n        \"expiryDate\": \"2025-12-31\"\n    }\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "url": {
+                    "raw": "{{baseUrl}}/api/clients/payment-methods",
+                    "host": ["{{baseUrl}}"],
+                    "path": ["api", "clients", "payment-methods"]
+                }
+            }
+        },
+        {
+            "name": "Remove Payment Method",
+            "request": {
+                "method": "DELETE",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{authToken}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{baseUrl}}/api/clients/payment-methods/{{paymentMethodId}}",
+                    "host": ["{{baseUrl}}"],
+                    "path": ["api", "clients", "payment-methods", "{{paymentMethodId}}"]
+                }
+            }
+        },
+        {
+            "name": "Update Stats",
+            "request": {
+                "method": "PUT",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{authToken}}",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"stats\": {\n        \"totalProjects\": 25,\n        \"activeProjects\": 5,\n        \"completedProjects\": 20,\n        \"totalFreelancersHired\": 30\n    }\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "url": {
+                    "raw": "{{baseUrl}}/api/clients/stats",
+                    "host": ["{{baseUrl}}"],
+                    "path": ["api", "clients", "stats"]
+                }
+            }
+        },
+        {
+            "name": "Update Social Profiles",
+            "request": {
+                "method": "PUT",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{authToken}}",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"socialProfiles\": {\n        \"linkedin\": \"https://linkedin.com/company/techsolutions\",\n        \"twitter\": \"https://twitter.com/techsolutions\",\n        \"facebook\": \"https://facebook.com/techsolutions\",\n        \"website\": \"https://techsolutions.com\"\n    }\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "url": {
+                    "raw": "{{baseUrl}}/api/clients/social-profiles",
+                    "host": ["{{baseUrl}}"],
+                    "path": ["api", "clients", "social-profiles"]
+                }
+            }
+        },
+        {
+            "name": "Update Preferences",
+            "request": {
+                "method": "PUT",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{authToken}}",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"preferences\": {\n        \"communicationChannel\": \"Email\",\n        \"timezone\": \"UTC+5:30\",\n        \"currency\": \"USD\",\n        \"language\": \"English\"\n    }\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "url": {
+                    "raw": "{{baseUrl}}/api/clients/preferences",
+                    "host": ["{{baseUrl}}"],
+                    "path": ["api", "clients", "preferences"]
+                }
+            }
+        }
+    ]
+}
