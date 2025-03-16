@@ -1,6 +1,9 @@
 const Industry = require('../models/industry.model');
 const mongoose = require('mongoose');
 
+// Helper function to validate ObjectId
+const isValidObjectId = (id) => mongoose.isValidObjectId(id);
+
 // Get all industries with optional filters
 exports.getIndustries = async (req, res) => {
     try {
@@ -20,7 +23,7 @@ exports.getIndustries = async (req, res) => {
         }
 
         if (parentId) {
-            if (!mongoose.isValidObjectId(parentId)) {
+            if (!isValidObjectId(parentId)) {
                 return res.status(400).json({
                     success: false,
                     error: 'Invalid parent industry ID format'
@@ -67,7 +70,7 @@ exports.getIndustry = async (req, res) => {
         const { idOrSlug } = req.params;
         
         let query;
-        if (mongoose.isValidObjectId(idOrSlug)) {
+        if (isValidObjectId(idOrSlug)) {
             query = { _id: idOrSlug };
         } else {
             query = { slug: idOrSlug };
@@ -103,7 +106,7 @@ exports.createIndustry = async (req, res) => {
         const industryData = { ...req.body };
 
         // Convert ObjectIds
-        if (industryData.parentIndustry && !mongoose.isValidObjectId(industryData.parentIndustry)) {
+        if (industryData.parentIndustry && !isValidObjectId(industryData.parentIndustry)) {
             return res.status(400).json({
                 success: false,
                 error: 'Invalid parent industry ID format'
@@ -111,13 +114,14 @@ exports.createIndustry = async (req, res) => {
         }
 
         if (industryData.skills) {
-            const skillIds = industryData.skills.map(id => {
-                if (!mongoose.isValidObjectId(id)) {
-                    throw new Error(`Invalid skill ID format: ${id}`);
-                }
-                return new mongoose.Types.ObjectId(id);
-            });
-            industryData.skills = skillIds;
+            const invalidSkills = industryData.skills.filter(id => !isValidObjectId(id));
+            if (invalidSkills.length > 0) {
+                return res.status(400).json({
+                    success: false,
+                    error: `Invalid skill IDs: ${invalidSkills.join(', ')}`
+                });
+            }
+            industryData.skills = industryData.skills.map(id => new mongoose.Types.ObjectId(id));
         }
 
         const industry = await Industry.create(industryData);
@@ -153,7 +157,7 @@ exports.updateIndustry = async (req, res) => {
         const { id } = req.params;
         const updateData = { ...req.body };
 
-        if (!mongoose.isValidObjectId(id)) {
+        if (!isValidObjectId(id)) {
             return res.status(400).json({
                 success: false,
                 error: 'Invalid industry ID format'
@@ -162,7 +166,7 @@ exports.updateIndustry = async (req, res) => {
 
         // Convert ObjectIds
         if (updateData.parentIndustry) {
-            if (!mongoose.isValidObjectId(updateData.parentIndustry)) {
+            if (!isValidObjectId(updateData.parentIndustry)) {
                 return res.status(400).json({
                     success: false,
                     error: 'Invalid parent industry ID format'
@@ -172,12 +176,14 @@ exports.updateIndustry = async (req, res) => {
         }
 
         if (updateData.skills) {
-            updateData.skills = updateData.skills.map(id => {
-                if (!mongoose.isValidObjectId(id)) {
-                    throw new Error(`Invalid skill ID format: ${id}`);
-                }
-                return new mongoose.Types.ObjectId(id);
-            });
+            const invalidSkills = updateData.skills.filter(id => !isValidObjectId(id));
+            if (invalidSkills.length > 0) {
+                return res.status(400).json({
+                    success: false,
+                    error: `Invalid skill IDs: ${invalidSkills.join(', ')}`
+                });
+            }
+            updateData.skills = updateData.skills.map(id => new mongoose.Types.ObjectId(id));
         }
 
         const industry = await Industry.findByIdAndUpdate(
@@ -214,7 +220,7 @@ exports.deleteIndustry = async (req, res) => {
     try {
         const { id } = req.params;
 
-        if (!mongoose.isValidObjectId(id)) {
+        if (!isValidObjectId(id)) {
             return res.status(400).json({
                 success: false,
                 error: 'Invalid industry ID format'
@@ -269,7 +275,7 @@ exports.updateMarketStats = async (req, res) => {
         const { id } = req.params;
         const { marketStats } = req.body;
 
-        if (!mongoose.isValidObjectId(id)) {
+        if (!isValidObjectId(id)) {
             return res.status(400).json({
                 success: false,
                 error: 'Invalid industry ID format'
@@ -307,7 +313,7 @@ exports.addIndustryTrend = async (req, res) => {
         const { id } = req.params;
         const { trend } = req.body;
 
-        if (!mongoose.isValidObjectId(id)) {
+        if (!isValidObjectId(id)) {
             return res.status(400).json({
                 success: false,
                 error: 'Invalid industry ID format'
@@ -316,6 +322,13 @@ exports.addIndustryTrend = async (req, res) => {
 
         // Convert skill ObjectIds in topSkills array
         if (trend.topSkills) {
+            const invalidSkills = trend.topSkills.filter(item => !isValidObjectId(item.skill));
+            if (invalidSkills.length > 0) {
+                return res.status(400).json({
+                    success: false,
+                    error: `Invalid skill IDs: ${invalidSkills.map(item => item.skill).join(', ')}`
+                });
+            }
             trend.topSkills = trend.topSkills.map(item => ({
                 ...item,
                 skill: new mongoose.Types.ObjectId(item.skill)
