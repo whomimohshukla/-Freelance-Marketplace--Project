@@ -8,6 +8,7 @@ const projectRoutes = require("../Server/routes/projectCRUD.routes");
 const skillsRoutes=require("../Server/routes/skills.routes")
 const freelancersRoute=require("../Server/routes/freelancer.routes")
 const clientRoute=require("../Server/routes/client.routes")
+const industryRoutes=require("../Server/routes/industry.routes")
 
 app.use(express.json());
 app.use(cookieParser());
@@ -21,6 +22,7 @@ app.use("/api/project", projectRoutes);
 app.use("/api/skills",skillsRoutes)
 app.use("/api/freelancers",freelancersRoute )
 app.use("/api/clients",clientRoute)
+app.use("/api/industries",industryRoutes)
 
 app.listen(PORT, () => {
 	console.log(`server is running on ${PORT}`);
