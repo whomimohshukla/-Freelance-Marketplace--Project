@@ -207,84 +207,27 @@ exports.updateAvailability = async (req, res) => {
 };
 
 // Search Freelancers
-exports.searchFreelancers = async (req, res) => {
+// Get Freelancer Profile by ID
+exports.getFreelancerProfile = async (req, res) => {
     try {
-        const {
-            skills,
-            hourlyRateMin,
-            hourlyRateMax,
-            availability,
-            rating,
-            page = 1,
-            limit = 10
-        } = req.query;
+        const { id } = req.params;
 
-        const query = {};
-
-        // Properly convert skill IDs to ObjectId
-        if (skills) {
-            try {
-                const skillIds = skills.split(',');
-                const skillIdArray = skillIds
-                    .map(id => id.trim())
-                    .filter(id => id.length > 0)
-                    .map(id => {
-                        if (!mongoose.isValidObjectId(id)) {
-                            throw new Error(`Invalid skill ID format: ${id}`);
-                        }
-                        return new mongoose.Types.ObjectId(id);
-                    });
-
-                if (skillIdArray.length > 0) {
-                    query['skills.skill'] = { $in: skillIdArray };
-                }
-            } catch (error) {
-                return res.status(400).json({
-                    success: false,
-                    error: error.message
-                });
-            }
+        if (!mongoose.isValidObjectId(id)) {
+            return res.status(400).json({ success: false, message: 'Invalid freelancer ID' });
         }
 
-        if (hourlyRateMin || hourlyRateMax) {
-            query.hourlyRate = {};
-            if (hourlyRateMin) query.hourlyRate.$gte = Number(hourlyRateMin);
-            if (hourlyRateMax) query.hourlyRate.$lte = Number(hourlyRateMax);
-        }
-
-        if (availability) {
-            query['availability.status'] = availability;
-        }
-
-        if (rating) {
-            query['rating.average'] = { $gte: Number(rating) };
-        }
-
-        const skip = (Number(page) - 1) * Number(limit);
-
-        const freelancers = await FreelancerProfile.find(query)
+        const freelancer = await FreelancerProfile.findById(id)
             .populate('user', 'firstName lastName email avatar')
-            .populate('skills.skill')
-            .skip(skip)
-            .limit(Number(limit))
-            .sort({ 'rating.average': -1 });
+            .populate('skills.skill');
 
-        const total = await FreelancerProfile.countDocuments(query);
+        if (!freelancer) {
+            return res.status(404).json({ success: false, message: 'Freelancer not found' });
+        }
 
-        res.status(200).json({
-            success: true,
-            data: freelancers,
-            pagination: {
-                total,
-                page: Number(page),
-                pages: Math.ceil(total / limit)
-            }
-        });
+        res.status(200).json({ success: true, data: freelancer });
     } catch (error) {
-        res.status(400).json({
-            success: false,
-            error: error.message
-        });
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Server error' });
     }
 };
 

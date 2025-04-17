@@ -16,6 +16,8 @@ exports.searchFreelancers = async (req, res) => {
             limit = 10
         } = req.query;
 
+        console.log('Search Parameters:', { skills, hourlyRate, availability, rating, page, limit });
+        
         const query = {};
 
         if (skills) {
@@ -39,12 +41,15 @@ exports.searchFreelancers = async (req, res) => {
         }
 
         if (availability) {
-            query.availability = availability;
+            // Match availability.status instead of availability directly
+            query['availability.status'] = availability;
         }
 
         if (rating) {
             query['rating.average'] = { $gte: Number(rating) };
         }
+
+        console.log('MongoDB Query:', JSON.stringify(query, null, 2));
 
         const skip = (Number(page) - 1) * Number(limit);
 
@@ -56,7 +61,11 @@ exports.searchFreelancers = async (req, res) => {
             .limit(Number(limit))
             .sort({ 'rating.average': -1 });
 
+        console.log('Found Freelancers Count:', freelancers.length);
+
         const total = await FreelancerProfile.countDocuments(query);
+
+        console.log('Total Documents:', total);
 
         res.status(200).json({
             success: true,

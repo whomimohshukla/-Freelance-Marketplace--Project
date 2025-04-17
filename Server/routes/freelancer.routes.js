@@ -51,7 +51,7 @@ router.put('/availability', auth, freelancerController.updateAvailability);
 // @route   GET /api/freelancers/search
 // @desc    Search freelancers with filters
 // @access  Public
-router.get('/search', freelancerController.searchFreelancers);
+router.get('/search', freelancerController.getFreelancerProfile);
 
 // @route   PUT /api/freelancers/stats
 // @desc    Update freelancer stats

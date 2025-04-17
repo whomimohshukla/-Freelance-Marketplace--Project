@@ -11,8 +11,8 @@ const skillController = require("../controllers/core-Project/Skill/skillControll
 // Protected routes
 // router.use(auth);
 router.post("/createSkill", skillController.createSkill);
-// router.patch('/:id', skillController.updateSkill);
-// router.delete('/:id', skillController.deleteSkill);
+router.patch('/:id', skillController.updateSkill);
+router.delete('/:id', skillController.deleteSkill);
 // router.post('/:id/endorse', skillController.addEndorsement);
 
 module.exports = router;
