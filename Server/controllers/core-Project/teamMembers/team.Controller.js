@@ -98,8 +98,8 @@ exports.searchTeams = async (req, res) => {
 
 exports.getTeamById = async (req, res) => {
     try {
-        const teamId = req.params.id.trim(); 
-        
+        const teamId = req.params.id.trim();
+
         const team = await Team.findById(teamId)
             .populate('leader', 'firstName lastName email avatar')
             .populate('members.user', 'firstName lastName email avatar')
@@ -130,7 +130,7 @@ exports.getTeamById = async (req, res) => {
 exports.updateTeam = async (req, res) => {
     try {
         const teamId = req.params.id.trim();  // Trim any extra whitespace or newline characters
-        
+
         const team = await Team.findById(teamId);
 
         if (!team) {
@@ -370,7 +370,14 @@ exports.updateMemberStatus = async (req, res) => {
 // Add team review
 exports.addTeamReview = async (req, res) => {
     try {
-        const team = await Team.findById(req.params.id);
+        const team = await Team.findById(req.params.id)
+            .populate({
+                path: 'projects.project',
+                populate: {
+                    path: 'client', // make sure 'client' field exists in your Project model
+                    select: '_id firstName lastName'
+                }
+            });
 
         if (!team) {
             return res.status(404).json({
@@ -380,9 +387,13 @@ exports.addTeamReview = async (req, res) => {
         }
 
         // Check if reviewer has worked with the team
-        const hasWorkedWithTeam = team.projects.some(
-            project => project.project.client.toString() === req.user._id.toString()
-        );
+        const hasWorkedWithTeam = team.projects.some(project => {
+            return (
+                project.project &&
+                project.project.client &&
+                project.project.client._id.toString() === req.user._id.toString()
+            );
+        });
 
         if (!hasWorkedWithTeam) {
             return res.status(403).json({
@@ -398,7 +409,7 @@ exports.addTeamReview = async (req, res) => {
             comment: req.body.comment
         });
 
-        await team.save(); // This will trigger the pre-save middleware to update average rating
+        await team.save();
 
         const updatedTeam = await Team.findById(req.params.id)
             .populate('ratings.reviews.client', 'firstName lastName avatar')
@@ -415,6 +426,7 @@ exports.addTeamReview = async (req, res) => {
         });
     }
 };
+
 
 exports.deleteTeam = async (req, res) => {
     try {
