@@ -10,6 +10,7 @@ const freelancersRoute = require("../Server/routes/freelancer.routes")
 const clientRoute = require("../Server/routes/client.routes")
 const industryRoutes = require("../Server/routes/industry.routes")
 const teamRoutes = require('../Server/routes/team.routes');
+const reviewRoutes = require("../Server/routes/reviewFreelancer.routes");
 
 app.use(express.json());
 app.use(cookieParser());
@@ -24,6 +25,7 @@ app.use("/api/skills", skillsRoutes)
 app.use("/api/freelancers", freelancersRoute)
 app.use("/api/clients", clientRoute)
 app.use("/api/industries", industryRoutes)
+app.use("/api/review", reviewRoutes)
 
 app.use('/api/teams', teamRoutes);
 
