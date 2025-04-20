@@ -8,7 +8,9 @@ const FreelancerProfile = require('../../../models/freelancer.model');
 
 exports.createReview = async (req, res) => {
     try {
-        const { project, reviewer, reviewee, rating, comment, attributes } = req.body;
+        const { project, reviewee, rating, comment, attributes } = req.body;
+        // use authenticated user as reviewer
+        const reviewer = req.user._id;
 
         const review = new Review({
             project,
@@ -32,6 +34,17 @@ exports.createReview = async (req, res) => {
             profile.rating.count = newCount;
 
             await profile.save();
+        }
+
+        // Attach new review and update project rating
+        const proj = await Project.findById(project);
+        if (proj) {
+            proj.reviews.push(review._id);
+            const projTotal = proj.rating.average * proj.rating.count;
+            const newCount = proj.rating.count + 1;
+            proj.rating.average = (projTotal + rating) / newCount;
+            proj.rating.count = newCount;
+            await proj.save();
         }
 
         res.status(201).json({ success: true, data: review });

@@ -118,35 +118,35 @@ exports.deleteProject = catchAsync(async (req, res) => {
   });
 });
 
-// Submit proposal
-exports.submitProposal = catchAsync(async (req, res) => {
-  const project = await Project.findById(req.params.id);
+// // Submit proposal
+// exports.submitProposal = catchAsync(async (req, res) => {
+//   const project = await Project.findById(req.params.id);
 
-  if (!project) {
-    throw new ApiError(404, 'Project not found');
-  }
+//   if (!project) {
+//     throw new ApiError(404, 'Project not found');
+//   }
 
-  if (project.status !== 'Open') {
-    throw new ApiError(400, 'Project is not open for proposals');
-  }
+//   if (project.status !== 'Open') {
+//     throw new ApiError(400, 'Project is not open for proposals');
+//   }
 
-  const proposal = {
-    freelancer: req.user._id,
-    freelancerProfile: req.body.freelancerProfile,
-    coverLetter: req.body.coverLetter,
-    proposedAmount: req.body.proposedAmount,
-    estimatedDuration: req.body.estimatedDuration,
-    attachments: req.body.attachments || []
-  };
+//   const proposal = {
+//     freelancer: req.user._id,
+//     freelancerProfile: req.body.freelancerProfile,
+//     coverLetter: req.body.coverLetter,
+//     proposedAmount: req.body.proposedAmount,
+//     estimatedDuration: req.body.estimatedDuration,
+//     attachments: req.body.attachments || []
+//   };
 
-  project.proposals.push(proposal);
-  await project.save();
+//   project.proposals.push(proposal);
+//   await project.save();
 
-  res.status(201).json({
-    status: 'success',
-    data: project
-  });
-});
+//   res.status(201).json({
+//     status: 'success',
+//     data: project
+//   });
+// });
 
 // Update project status
 exports.updateProjectStatus = catchAsync(async (req, res) => {
@@ -199,30 +199,30 @@ exports.addTeamMember = catchAsync(async (req, res) => {
   });
 });
 
-// Update project progress
-exports.updateProgress = catchAsync(async (req, res) => {
-  const { percentage } = req.body;
-  const project = await Project.findOneAndUpdate(
-    { 
-      _id: req.params.id,
-      client: req.user._id
-    },
-    {
-      'progress.percentage': percentage,
-      'progress.lastUpdated': Date.now()
-    },
-    { new: true }
-  );
+// // Update project progress
+// exports.updateProgress = catchAsync(async (req, res) => {
+//   const { percentage } = req.body;
+//   const project = await Project.findOneAndUpdate(
+//     { 
+//       _id: req.params.id,
+//       client: req.user._id
+//     },
+//     {
+//       'progress.percentage': percentage,
+//       'progress.lastUpdated': Date.now()
+//     },
+//     { new: true }
+//   );
 
-  if (!project) {
-    throw new ApiError(404, 'Project not found or unauthorized');
-  }
+//   if (!project) {
+//     throw new ApiError(404, 'Project not found or unauthorized');
+//   }
 
-  res.json({
-    status: 'success',
-    data: project
-  });
-});
+//   res.json({
+//     status: 'success',
+//     data: project
+//   });
+// });
 
 // Get similar projects
 exports.getSimilarProjects = catchAsync(async (req, res) => {
