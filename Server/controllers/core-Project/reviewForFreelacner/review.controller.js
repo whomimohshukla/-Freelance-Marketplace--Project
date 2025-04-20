@@ -3,26 +3,43 @@ const Project = require('../../../models/project.model');
 const mongoose = require('mongoose');
 
 
+
+const FreelancerProfile = require('../../../models/freelancer.model');
+
 exports.createReview = async (req, res) => {
     try {
-        const { project, reviewee, rating, comment, attributes } = req.body;
-        const existingReview = await Review.findOne({ project, reviewer: req.user._id, reviewee });
-        if (existingReview) { return res.status(400).json({ message: "Review already exists" }) }
-        const newReview = await Review.create({
+        const { project, reviewer, reviewee, rating, comment, attributes } = req.body;
+
+        const review = new Review({
             project,
-            reviewer: req.user._id,
+            reviewer,
             reviewee,
             rating,
             comment,
-            attributes,
+            attributes
         });
-        res.status(201).json({ success: true, data: newReview });
 
-    }
-    catch (err) {
+        await review.save();
+
+        // 👉 Find the freelancer profile
+        const profile = await FreelancerProfile.findOne({ user: reviewee });
+        if (profile) {
+            const currentTotalRating = profile.rating.average * profile.rating.count;
+            const newCount = profile.rating.count + 1;
+            const newAverage = (currentTotalRating + rating) / newCount;
+
+            profile.rating.average = newAverage;
+            profile.rating.count = newCount;
+
+            await profile.save();
+        }
+
+        res.status(201).json({ success: true, data: review });
+    } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
-}
+};
+
 
 //get all review 
 
@@ -119,17 +136,17 @@ exports.getFreelancerRatingStats = async (req, res) => {
 };
 exports.getMyGivenReviews = async (req, res) => {
     try {
-      const reviews = await Review.find({ reviewer: req.user._id })
-        .populate('reviewee', 'name avatar')
-        .populate('project', 'title');
-  
-      res.status(200).json({ success: true, data: reviews });
-    } catch (err) {
-      res.status(500).json({ success: false, error: err.message });
-    }
-  };
+        const reviews = await Review.find({ reviewer: req.user._id })
+            .populate('reviewee', 'name avatar')
+            .populate('project', 'title');
 
-  
+        res.status(200).json({ success: true, data: reviews });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+};
+
+
 //   createReview	>> Client	>> Freelancer	Create a new review
 // getReviewsForFreelancer	>> Client	>> Freelancer	Show all reviews for a freelancer
 // updateReviewsForFreelancer	>> Client	>> Freelancer	Edit an existing review
