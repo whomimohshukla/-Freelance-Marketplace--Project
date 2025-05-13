@@ -71,6 +71,41 @@ const admin = async (req, res, next) => {
     }
 };
 
+exports. isClient = async (req, res, next) => {
+    try {
+        if (req.user.role !== 'client') {
+            return res.status(401).json({
+                success: false,
+                message: 'User is not a client'
+            });
+        }
+        next();
+
+    } catch (error) {
+        return res.status(401).json({
+            success: false,
+            message: 'Invalid token'
+        });
+    }
+}
+
+exports.isFreelancer = async (req, res, next) => {
+    try {
+        if (req.user.role !== 'freelancer') {
+            return res.status(401).json({
+                success: false,
+                message: 'User is not a freelancer'
+            });
+        }
+        next();
+
+    } catch (error) {
+        return res.status(401).json({
+            success: false,
+            message: 'Invalid token'
+        });
+    }
+}
 
 
 module.exports = auth;
