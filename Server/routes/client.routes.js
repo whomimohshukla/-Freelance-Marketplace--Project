@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../../Server/middleware/auth.middleware');
 const clientController = require('../controllers/client.controller');
+const isClient  = require('../middleware/auth.middleware');
+
+
 
 
 router.get('/search', clientController.searchClients);
@@ -10,9 +13,9 @@ router.get('/search', clientController.searchClients);
 router.get('/top', clientController.getTopClients);
 
 
-router.post('/profile', auth, clientController.createOrUpdateProfile);
+router.post('/profile', auth,isClient, clientController.createOrUpdateProfile);
 
-router.get('/profile/:userId', clientController.getProfile);
+router.get('/profile/:userId',auth ,clientController.getProfile);
 
 // router.put('/company', auth, clientController.updateCompany);
 
