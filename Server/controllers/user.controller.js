@@ -1,4 +1,5 @@
 const User = require("../models/user.model");
+// const OTP = require("../models/otp.model");
 const FreelancerProfile = require("../models/freelancer.model");
 const ClientProfile = require("../models/client.model");
 const { OAuth2Client } = require("google-auth-library");
@@ -109,9 +110,9 @@ const resendOTP = async (req, res) => {
 
 const signup = async (req, res) => {
 	try {
-		const { email, password, firstName, lastName, role } = req.body;
+		const { email, password, firstName, lastName, role,otp } = req.body;
 
-		if (!email || !password || !firstName || !lastName || !role) {
+		if (!email || !password || !firstName || !lastName || !role || !otp) {
 			return res.status(400).json({
 				success: false,
 				message: "All fields are required",
@@ -134,6 +135,17 @@ const signup = async (req, res) => {
 				message: "User already exists",
 			});
 		}
+		// check if otp is valid
+		const recentOtp = await OTP.findOne({ email })
+		.sort({ createdAt: -1 })
+		.limit(1);
+	  // check the otp and recent otp (macthes from db and recent)
+	  if (!recentOtp || recentOtp.otp !== otp) {
+		return res.status(400).json({ message: "Invalid OTP" });
+	  }
+  
+	  // hash the password
+	  const hashedPassword = await bcrypt.hash(password, 10);
 
 		const ip = req.ip || req.connection.remoteAddress;
 		const locationInfo = getLocationInfo(ip);
@@ -210,7 +222,7 @@ const login = async (req, res) => {
 		if (!isPasswordValid) {
 			return res.status(401).json({
 				success: false,
-				message: "Invalid credentials",
+				message: "error while checking password",
 			});
 		}
 
@@ -600,12 +612,12 @@ const resetPassword = async (req, res) => {
 			});
 		}
 
-		if (!validatePassword(newPassword)) {
-			return res.status(400).json({
-				success: false,
-				message: "Password must meet security requirements",
-			});
-		}
+		// if (!validatePassword(newPassword)) {
+		// 	return res.status(400).json({
+		// 		success: false,
+		// 		message: "Password must meet security requirements",
+		// 	});
+		// }
 
 		const isCurrentPasswordMatch = await bcrypt.compare(
 			newPassword,
