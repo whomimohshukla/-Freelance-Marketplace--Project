@@ -2,7 +2,6 @@ const Project = require('../../../models/project.model');
 const ApiError = require('../../utils/ApiError');
 const catchAsync = require('../../utils/catchAsync');
 
-// Create new project for client with client company
 exports.createProject = catchAsync(async (req, res) => {
   const project = await Project.create({
     ...req.body,
