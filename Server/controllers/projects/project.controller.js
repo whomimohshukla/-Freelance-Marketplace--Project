@@ -28,7 +28,7 @@ exports.createProject = async (req, res) => {
                 error: 'Only clients can create projects'
             });
         }
-        
+
         const {
             title,
             description,
@@ -62,7 +62,7 @@ exports.createProject = async (req, res) => {
                 error: "Invalid skills structure",
             });
         }
-        
+
         // Validate category
         try {
             if (!mongoose.Types.ObjectId.isValid(category)) {
@@ -71,10 +71,10 @@ exports.createProject = async (req, res) => {
                     error: 'Invalid category ID format'
                 });
             }
-            
+
             const Category = mongoose.model('Category'); // or 'Industry'
             const existingCategory = await Category.findById(category);
-            
+
             if (!existingCategory) {
                 return res.status(400).json({
                     success: false,
@@ -87,11 +87,11 @@ exports.createProject = async (req, res) => {
                 error: 'Error validating category: ' + error.message
             });
         }
-        
+
         // Validate skills
         try {
             const skillIds = skills.map(skill => skill.skill);
-            
+
             // Check for valid ObjectId format
             const invalidSkillIds = skillIds.filter(id => !mongoose.Types.ObjectId.isValid(id));
             if (invalidSkillIds.length > 0) {
@@ -100,27 +100,27 @@ exports.createProject = async (req, res) => {
                     error: `Invalid skill ID format: ${invalidSkillIds.join(', ')}`
                 });
             }
-            
+
             // Check if skills exist
             const Skill = mongoose.model('Skill');
             const existingSkills = await Skill.find({ _id: { $in: skillIds } });
-            
+
             if (existingSkills.length !== skillIds.length) {
                 const existingSkillIds = existingSkills.map(skill => skill._id.toString());
                 const nonExistentSkills = skillIds.filter(id => !existingSkillIds.includes(id.toString()));
-                
+
                 return res.status(400).json({
                     success: false,
                     error: `The following skills do not exist: ${nonExistentSkills.join(', ')}`
                 });
             }
-            
+
             // Validate experience levels
             const validExperienceLevels = ['Beginner', 'Intermediate', 'Expert', 'Any Level'];
-            const invalidExperienceLevels = skills.filter(skill => 
+            const invalidExperienceLevels = skills.filter(skill =>
                 !validExperienceLevels.includes(skill.experienceLevel)
             );
-            
+
             if (invalidExperienceLevels.length > 0) {
                 return res.status(400).json({
                     success: false,
@@ -133,7 +133,7 @@ exports.createProject = async (req, res) => {
                 error: 'Error validating skills: ' + error.message
             });
         }
-        
+
         // Create project data
         const projectData = {
             // Your project data structure
@@ -142,7 +142,7 @@ exports.createProject = async (req, res) => {
 
         // Create project
         const project = await Project.create(projectData);
-        
+
         // Populate and return
         await project.populate([
             { path: "client", select: "name email" },
@@ -277,4 +277,47 @@ exports.getAllProjects = async (req, res) => {
         });
     }
 
-} 
+}
+
+
+exports.getProjectById = async (req, res) => {
+
+    try {
+        const { id } = req.params;
+
+        if (!ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid project ID format'
+            });
+        }
+
+        
+        const project = await Project.findById(id)
+                .populate('client', 'firstName lastName email avatar')
+                .populate('clientCompany', 'company')
+                .populate('category', 'name')
+                .populate('skills.skill', 'name category')
+                .populate('selectedFreelancer', 'firstName lastName avatar')
+                .populate({
+                  path: 'proposals.freelancer',
+                  select: 'firstName lastName avatar'
+                })
+                .populate({
+                  path: 'proposals.freelancerProfile',
+                  select: 'title hourlyRate rating'
+                })
+                .populate({
+                  path: 'milestones.tasks',
+                  select: 'title description status'
+                })
+                .populate({
+                  path: 'milestones.payment',
+                  select: 'amount status'
+                });
+        
+
+    } catch (error) {
+
+    }
+}
