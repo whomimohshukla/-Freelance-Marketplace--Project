@@ -22,9 +22,9 @@ const projectSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    category: {
+    Industry: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Category",
+      ref: "Industry",
       required: true,
     },
 
@@ -315,7 +315,7 @@ const projectSchema = new mongoose.Schema(
 projectSchema.index({ client: 1 });
 projectSchema.index({ status: 1 });
 projectSchema.index({ "skills.skill": 1 });
-projectSchema.index({ category: 1 });
+projectSchema.index({ Industry: 1 });
 projectSchema.index({ "proposals.freelancer": 1 });
 
 // Middleware to update metrics
