@@ -151,7 +151,7 @@ exports.createProject = async (req, res) => {
 				});
 			}
 		}
-
+		const allowedStatuses = ["Draft", "Open"];
 		// Create project
 		const newProject = new Project({
 			client: clientId,
@@ -173,7 +173,9 @@ exports.createProject = async (req, res) => {
 			startDate,
 			endDate,
 			attachments: attachments || [],
-			status: "Draft",
+			status: allowedStatuses.includes(req.body.status)
+				? req.body.status
+				: "Draft",
 		});
 
 		const savedProject = await newProject.save();
@@ -327,25 +329,16 @@ exports.getProjectById = async (req, res) => {
 			});
 		}
 
-		// Check if user has permission to view this project
-		const canView = this.canViewProject(project, userId);
-		if (!canView) {
-			return res.status(403).json({
-				success: false,
-				message: "Access denied",
-			});
-		}
-
 		// Increment view count
 		await Project.findByIdAndUpdate(projectId, {
 			$inc: { "metrics.views": 1 },
 		});
 
 		// Track analytics
-		await this.trackAnalytics(userId, "Project View", {
-			projectId: projectId,
-			action: "view_project",
-		});
+		// await this.trackAnalytics(userId, "Project View", {
+		// 	projectId: projectId,
+		// 	action: "view_project",
+		// });
 
 		res.json({
 			success: true,
@@ -481,17 +474,109 @@ exports.deleteProject = async (req, res) => {
 			updatedAt: new Date(),
 		});
 
+		//if hard delete
+		// await Project.findByIdAndDelete(projectId);
+
 		// Notify freelancers with pending proposals
 		// (In a real app, you'd send notifications here)
 
 		res.json({
 			success: true,
-			message: "Project cancelled successfully",
+			message: "Project deleted successfully",
 		});
 	} catch (error) {
 		res.status(500).json({
 			success: false,
 			message: "Error deleting project",
+			error: error.message,
+		});
+	}
+};
+
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+/**
+ * SUBMIT PROPOSAL - Freelancer submits proposal for project
+ * Features: Cover letter, proposed amount, timeline, attachments
+ */
+
+exports.submitProposal = async (req, res) => {
+	try {
+		const { projectId } = req.params;
+		const { coverLetter, proposedAmount, estimatedDuration, attachments } =
+			req.body;
+		const freelancerId = req.user.id;
+
+		// Validate freelancer
+		const freelancer = await User.findById(freelancerId);
+		if (!freelancer || freelancer.role !== "freelancer") {
+			return res.status(403).json({
+				success: false,
+				message: "Only freelancers can submit proposals",
+			});
+		}
+
+		const project = await Project.findById(projectId);
+		if (!project) {
+			return res.status(404).json({
+				success: false,
+				message: "Project not found",
+			});
+		}
+
+		// Check if project is still open for proposals
+		if (project.status !== "Open") {
+			return res.status(400).json({
+				success: false,
+				message: "Project is not open for proposals",
+			});
+		}
+
+		// Check if freelancer already submitted a proposal
+		const existingProposal = project.proposals.find(
+			(p) => p.freelancer.toString() === freelancerId
+		);
+		if (existingProposal) {
+			return res.status(400).json({
+				success: false,
+				message: "You have already submitted a proposal for this project",
+			});
+		}
+
+		// Get freelancer profile
+		const freelancerProfile = await FreelancerProfile.findOne({
+			user: freelancerId,
+		});
+
+		const proposal = {
+			freelancer: freelancerId,
+			freelancerProfile: freelancerProfile?._id,
+			coverLetter,
+			proposedAmount,
+			estimatedDuration,
+			attachments: attachments || [],
+			status: "Pending",
+			submittedAt: new Date(),
+		};
+
+		project.proposals.push(proposal);
+		await project.save();
+
+		// Track analytics
+		// await this.trackAnalytics(freelancerId, "Proposal", {
+		// 	projectId: projectId,
+		// 	action: "submit_proposal",
+		// });
+
+		res.status(201).json({
+			success: true,
+			message: "Proposal submitted successfully",
+			proposal,
+		});
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			message: "Error submitting proposal",
 			error: error.message,
 		});
 	}
