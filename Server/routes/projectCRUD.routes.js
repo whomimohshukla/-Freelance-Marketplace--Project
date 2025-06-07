@@ -18,4 +18,22 @@ Router.delete("/:projectId", auth, Project.deleteProject);
 
 Router.post("/:projectId/submit-proposal", auth, Project.submitProposal);
 
+Router.get("/:projectId/proposals", auth, Project.getProjectProposals);
+
+Router.put(
+	"/:projectId/proposals/:proposalId",
+	auth,
+	Project.updateProposalStatus
+);
+
+Router.post("/:projectId/milestones", auth, Project.createMilestone);
+
+Router.put(
+	"/:projectId/milestones/:milestoneId",
+	auth,
+	Project.updateMilestoneStatus
+);
+
+Router.put("/:projectId/status", auth, Project.updateProjectStatus);
+
 module.exports = Router;
