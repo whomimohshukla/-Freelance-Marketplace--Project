@@ -581,3 +581,454 @@ exports.submitProposal = async (req, res) => {
 		});
 	}
 };
+
+/**
+ * GET PROJECT PROPOSALS - Client views all proposals for their project
+ * Features: Pagination, sorting, filtering by status
+ */
+
+exports.getProjectProposals = async (req, res) => {
+	try {
+		const { projectId } = req.params;
+		const { status, sortBy = "submittedAt", sortOrder = "desc" } = req.query;
+		const userId = req.user.id;
+
+		const project = await Project.findById(projectId)
+			.populate({
+				path: "proposals.freelancer",
+				select: "firstName lastName avatar",
+			})
+			.populate({
+				path: "proposals.freelancerProfile",
+				select: "title bio hourlyRate rating stats",
+			});
+
+		if (!project) {
+			return res.status(404).json({
+				success: false,
+				message: "Project not found",
+			});
+		}
+
+		// Check if user is the project owner
+		if (project.client.toString() !== userId) {
+			return res.status(403).json({
+				success: false,
+				message: "Only project owner can view proposals",
+			});
+		}
+
+		let proposals = project.proposals;
+
+		// Filter by status if provided
+		if (status) {
+			proposals = proposals.filter((p) => p.status === status);
+		}
+
+		// Sort proposals
+		proposals.sort((a, b) => {
+			const aValue = a[sortBy];
+			const bValue = b[sortBy];
+			if (sortOrder === "desc") {
+				return bValue > aValue ? 1 : -1;
+			}
+			return aValue > bValue ? 1 : -1;
+		});
+
+		res.json({
+			success: true,
+			proposals,
+			totalProposals: proposals.length,
+		});
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			message: "Error fetching proposals",
+			error: error.message,
+		});
+	}
+};
+/**
+ * UPDATE PROPOSAL STATUS - Client can shortlist, accept, or reject proposals
+ * Features: Shortlist, accept, reject proposals with notes
+ */
+exports.updateProposalStatus = async (req, res) => {
+	try {
+		// Trim whitespace from parameters to handle newlines and spaces
+		const projectId = req.params.projectId.trim();
+		const proposalId = req.params.proposalId.trim();
+		const { status, notes, rating } = req.body;
+		const userId = req.user.id;
+
+		// Additional validation for MongoDB ObjectId format
+		const mongoose = require("mongoose");
+		if (!mongoose.Types.ObjectId.isValid(projectId)) {
+			return res.status(400).json({
+				success: false,
+				message: "Invalid project ID format",
+			});
+		}
+
+		if (!mongoose.Types.ObjectId.isValid(proposalId)) {
+			return res.status(400).json({
+				success: false,
+				message: "Invalid proposal ID format",
+			});
+		}
+
+		// Validate status
+		const validStatuses = ["Pending", "Accepted", "Rejected"];
+		if (!validStatuses.includes(status)) {
+			return res.status(400).json({
+				success: false,
+				message: `Invalid status. Must be one of: ${validStatuses.join(
+					", "
+				)}`,
+			});
+		}
+
+		const project = await Project.findById(projectId);
+		if (!project) {
+			return res.status(404).json({
+				success: false,
+				message: "Project not found",
+			});
+		}
+
+		// Check if user is the project owner
+		if (project.client.toString() !== userId) {
+			return res.status(403).json({
+				success: false,
+				message: "Only project owner can update proposal status",
+			});
+		}
+
+		// Debug: Log proposals array
+		console.log("All proposals:", project.proposals);
+		console.log("Looking for proposalId:", proposalId);
+
+		// Find proposal using find() method instead of id()
+		const proposal = project.proposals.find(
+			(p) => p._id.toString() === proposalId
+		);
+
+		console.log("Found proposal:", proposal);
+
+		if (!proposal) {
+			return res.status(404).json({
+				success: false,
+				message: "Proposal not found",
+				debug: {
+					projectId,
+					proposalId,
+					availableProposals: project.proposals.map((p) => ({
+						id: p._id.toString(),
+						freelancer: p.freelancer.toString(),
+					})),
+				},
+			});
+		}
+
+		// Check if proposal is already processed
+		if (proposal.status !== "Pending" && status !== "Pending") {
+			return res.status(400).json({
+				success: false,
+				message: `Cannot update proposal that is already ${proposal.status}`,
+			});
+		}
+
+		// Update proposal
+		proposal.status = status;
+		if (notes) proposal.notes = notes;
+		if (rating) proposal.rating = rating;
+		proposal.updatedAt = new Date();
+
+		// If accepting a proposal, set selected freelancer and reject others
+		if (status === "Accepted") {
+			project.selectedFreelancer = proposal.freelancer;
+			project.status = "In Progress";
+
+			// Reject all other pending proposals
+			project.proposals.forEach((p) => {
+				if (p._id.toString() !== proposalId && p.status === "Pending") {
+					p.status = "Rejected";
+					p.updatedAt = new Date();
+				}
+			});
+		}
+
+		// Update project's updatedAt timestamp
+		project.updatedAt = new Date();
+
+		await project.save();
+
+		// Populate the updated project to get full details
+		const updatedProject = await Project.findById(projectId)
+			.populate("proposals.freelancer", "firstName lastName email avatar")
+			.populate("selectedFreelancer", "firstName lastName email avatar");
+
+		const updatedProposal = updatedProject.proposals.find(
+			(p) => p._id.toString() === proposalId
+		);
+
+		// Track analytics
+		// await this.trackAnalytics(userId, "Proposal Status Update", {
+		// 	projectId: projectId,
+		// 	proposalId: proposalId,
+		// 	action: `proposal_${status.toLowerCase()}`,
+		// });
+
+		// Send notification to freelancer
+		// (In a real app, you'd send email/push notifications here)
+
+		res.json({
+			success: true,
+			message: `Proposal ${status.toLowerCase()} successfully`,
+			proposal: updatedProposal,
+			project: {
+				id: updatedProject._id,
+				status: updatedProject.status,
+				selectedFreelancer: updatedProject.selectedFreelancer,
+			},
+		});
+	} catch (error) {
+		console.error("Error updating proposal status:", error);
+		res.status(500).json({
+			success: false,
+			message: "Error updating proposal status",
+			error: error.message,
+		});
+	}
+};
+
+// ==================== MILESTONE MANAGEMENT ====================
+
+/**
+ * CREATE MILESTONE - Create project milestones
+ * Features: Title, description, amount, due date
+ */
+
+exports.createMilestone = async (req, res) => {
+	try {
+		const { projectId } = req.params;
+		const { title, description, amount, dueDate } = req.body;
+		const userId = req.user.id;
+
+		const project = await Project.findById(projectId);
+		if (!project) {
+			return res.status(404).json({
+				success: false,
+				message: "Project not found",
+			});
+		}
+
+		// Check if user can create milestones (client or selected freelancer)
+		const canCreate =
+			project.client.toString() === userId ||
+			project.selectedFreelancer?.toString() === userId;
+
+		if (!canCreate) {
+			return res.status(403).json({
+				success: false,
+				message:
+					"Only project client or selected freelancer can create milestones",
+			});
+		}
+
+		const milestone = {
+			title,
+			description,
+			amount,
+			dueDate: new Date(dueDate),
+			status: "Pending",
+		};
+
+		project.milestones.push(milestone);
+		await project.save();
+
+		res.status(201).json({
+			success: true,
+			message: "Milestone created successfully",
+			milestone: project.milestones[project.milestones.length - 1],
+		});
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			message: "Error creating milestone",
+			error: error.message,
+		});
+	}
+};
+/**
+ * UPDATE MILESTONE STATUS - Update milestone progress
+ * Features: Mark as completed, in progress, approved
+ */
+
+exports.updateMilestoneStatus = async (req, res) => {
+	try {
+		const { projectId, milestoneId } = req.params;
+		const { status } = req.body;
+		const userId = req.user.id;
+
+		const project = await Project.findById(projectId);
+		if (!project) {
+			return res.status(404).json({
+				success: false,
+				message: "Project not found",
+			});
+		}
+
+		const milestone = project.milestones.id(milestoneId);
+		if (!milestone) {
+			return res.status(404).json({
+				success: false,
+				message: "Milestone not found",
+			});
+		}
+
+		// Check permissions based on status being set
+		let canUpdate = false;
+		if (
+			status === "Completed" &&
+			project.selectedFreelancer?.toString() === userId
+		) {
+			canUpdate = true; // Freelancer can mark as completed
+		} else if (
+			status === "Approved" &&
+			project.client.toString() === userId
+		) {
+			canUpdate = true; // Client can approve
+		} else if (project.client.toString() === userId) {
+			canUpdate = true; // Client can change any status
+		}
+
+		if (!canUpdate) {
+			return res.status(403).json({
+				success: false,
+				message: "Insufficient permissions to update milestone status",
+			});
+		}
+
+		milestone.status = status;
+
+		// Update project progress
+		await project.updateProgress();
+
+		res.json({
+			success: true,
+			message: "Milestone status updated successfully",
+			milestone,
+		});
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			message: "Error updating milestone status",
+			error: error.message,
+		});
+	}
+};
+
+
+
+
+  /**
+   * UPDATE PROJECT STATUS - Change project status
+   * Features: Mark as completed, cancelled, in review
+   */
+  exports.updateProjectStatus = async (req, res) => {
+	try {
+	  const { projectId } = req.params;
+	  const { status, reason } = req.body;
+	  const userId = req.user.id;
+  
+	  const project = await Project.findById(projectId);
+	  if (!project) {
+		return res.status(404).json({
+		  success: false,
+		  message: 'Project not found'
+		});
+	  }
+  
+	  // Check permissions
+	  const isClient = project.client.toString() === userId;
+	  const isFreelancer = project.selectedFreelancer?.toString() === userId;
+  
+	  if (!isClient && !isFreelancer) {
+		return res.status(403).json({
+		  success: false,
+		  message: 'Only project participants can update project status'
+		});
+	  }
+  
+	  // Store current status for validation and tracking
+	  const currentStatus = project.status;
+  
+	  // Validate status transitions - Updated to match actual schema enum values
+	  const allowedTransitions = {
+		'Draft': ['Open', 'Cancelled'],
+		'Open': ['In Progress', 'Cancelled'],
+		'In Progress': ['In Review', 'Completed', 'Cancelled', 'Disputed'],
+		'In Review': ['Completed', 'In Progress', 'Disputed'],
+		'Completed': [], // Final state - no further transitions
+		'Cancelled': [], // Final state - no further transitions
+		'Disputed': ['In Progress', 'Cancelled']
+	  };
+  
+	  if (!allowedTransitions[currentStatus]?.includes(status)) {
+		return res.status(400).json({
+		  success: false,
+		  message: `Cannot change status from ${currentStatus} to ${status}`
+		});
+	  }
+  
+	  // Update project status
+	  project.status = status;
+  
+	  // Set completion date if project is completed
+	  if (status === 'Completed') {
+		project.timeline.actualEndDate = new Date();
+	  }
+  
+	  // Set cancelled date if project is cancelled
+	  if (status === 'Cancelled') {
+		project.timeline.cancelledDate = new Date();
+	  }
+  
+	  // Add status change reason to project history if provided
+	  if (reason) {
+		if (!project.statusHistory) {
+		  project.statusHistory = [];
+		}
+		project.statusHistory.push({
+		  status: status,
+		  reason: reason,
+		  changedBy: userId,
+		  changedAt: new Date()
+		});
+	  }
+  
+	  await project.save();
+  
+	  // Track analytics
+	  // await this.trackAnalytics(userId, 'Project Status Change', {
+	  //   projectId: projectId,
+	  //   action: 'status_change',
+	  //   oldStatus: currentStatus,
+	  //   newStatus: status,
+	  //   reason: reason
+	  // });
+  
+	  res.json({
+		success: true,
+		message: `Project status updated to ${status}`,
+		project
+	  });
+  
+	} catch (error) {
+	  res.status(500).json({
+		success: false,
+		message: 'Error updating project status',
+		error: error.message
+	  });
+	}
+  };
