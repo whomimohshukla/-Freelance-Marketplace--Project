@@ -928,107 +928,209 @@ exports.updateMilestoneStatus = async (req, res) => {
 	}
 };
 
-
-
-
-  /**
-   * UPDATE PROJECT STATUS - Change project status
-   * Features: Mark as completed, cancelled, in review
-   */
-  exports.updateProjectStatus = async (req, res) => {
+/**
+ * UPDATE PROJECT STATUS - Change project status
+ * Features: Mark as completed, cancelled, in review
+ */
+exports.updateProjectStatus = async (req, res) => {
 	try {
-	  const { projectId } = req.params;
-	  const { status, reason } = req.body;
-	  const userId = req.user.id;
-  
-	  const project = await Project.findById(projectId);
-	  if (!project) {
-		return res.status(404).json({
-		  success: false,
-		  message: 'Project not found'
-		});
-	  }
-  
-	  // Check permissions
-	  const isClient = project.client.toString() === userId;
-	  const isFreelancer = project.selectedFreelancer?.toString() === userId;
-  
-	  if (!isClient && !isFreelancer) {
-		return res.status(403).json({
-		  success: false,
-		  message: 'Only project participants can update project status'
-		});
-	  }
-  
-	  // Store current status for validation and tracking
-	  const currentStatus = project.status;
-  
-	  // Validate status transitions - Updated to match actual schema enum values
-	  const allowedTransitions = {
-		'Draft': ['Open', 'Cancelled'],
-		'Open': ['In Progress', 'Cancelled'],
-		'In Progress': ['In Review', 'Completed', 'Cancelled', 'Disputed'],
-		'In Review': ['Completed', 'In Progress', 'Disputed'],
-		'Completed': [], // Final state - no further transitions
-		'Cancelled': [], // Final state - no further transitions
-		'Disputed': ['In Progress', 'Cancelled']
-	  };
-  
-	  if (!allowedTransitions[currentStatus]?.includes(status)) {
-		return res.status(400).json({
-		  success: false,
-		  message: `Cannot change status from ${currentStatus} to ${status}`
-		});
-	  }
-  
-	  // Update project status
-	  project.status = status;
-  
-	  // Set completion date if project is completed
-	  if (status === 'Completed') {
-		project.timeline.actualEndDate = new Date();
-	  }
-  
-	  // Set cancelled date if project is cancelled
-	  if (status === 'Cancelled') {
-		project.timeline.cancelledDate = new Date();
-	  }
-  
-	  // Add status change reason to project history if provided
-	  if (reason) {
-		if (!project.statusHistory) {
-		  project.statusHistory = [];
+		const { projectId } = req.params;
+		const { status, reason } = req.body;
+		const userId = req.user.id;
+
+		const project = await Project.findById(projectId);
+		if (!project) {
+			return res.status(404).json({
+				success: false,
+				message: "Project not found",
+			});
 		}
-		project.statusHistory.push({
-		  status: status,
-		  reason: reason,
-		  changedBy: userId,
-		  changedAt: new Date()
+
+		// Check permissions
+		const isClient = project.client.toString() === userId;
+		const isFreelancer = project.selectedFreelancer?.toString() === userId;
+
+		if (!isClient && !isFreelancer) {
+			return res.status(403).json({
+				success: false,
+				message: "Only project participants can update project status",
+			});
+		}
+
+		// Store current status for validation and tracking
+		const currentStatus = project.status;
+
+		// Validate status transitions - Updated to match actual schema enum values
+		const allowedTransitions = {
+			Draft: ["Open", "Cancelled"],
+			Open: ["In Progress", "Cancelled"],
+			"In Progress": ["In Review", "Completed", "Cancelled", "Disputed"],
+			"In Review": ["Completed", "In Progress", "Disputed"],
+			Completed: [], // Final state - no further transitions
+			Cancelled: [], // Final state - no further transitions
+			Disputed: ["In Progress", "Cancelled"],
+		};
+
+		if (!allowedTransitions[currentStatus]?.includes(status)) {
+			return res.status(400).json({
+				success: false,
+				message: `Cannot change status from ${currentStatus} to ${status}`,
+			});
+		}
+
+		// Update project status
+		project.status = status;
+
+		// Set completion date if project is completed
+		if (status === "Completed") {
+			project.timeline.actualEndDate = new Date();
+		}
+
+		// Set cancelled date if project is cancelled
+		if (status === "Cancelled") {
+			project.timeline.cancelledDate = new Date();
+		}
+
+		// Add status change reason to project history if provided
+		if (reason) {
+			if (!project.statusHistory) {
+				project.statusHistory = [];
+			}
+			project.statusHistory.push({
+				status: status,
+				reason: reason,
+				changedBy: userId,
+				changedAt: new Date(),
+			});
+		}
+
+		await project.save();
+
+		// Track analytics
+		// await this.trackAnalytics(userId, 'Project Status Change', {
+		//   projectId: projectId,
+		//   action: 'status_change',
+		//   oldStatus: currentStatus,
+		//   newStatus: status,
+		//   reason: reason
+		// });
+
+		res.json({
+			success: true,
+			message: `Project status updated to ${status}`,
+			project,
 		});
-	  }
-  
-	  await project.save();
-  
-	  // Track analytics
-	  // await this.trackAnalytics(userId, 'Project Status Change', {
-	  //   projectId: projectId,
-	  //   action: 'status_change',
-	  //   oldStatus: currentStatus,
-	  //   newStatus: status,
-	  //   reason: reason
-	  // });
-  
-	  res.json({
-		success: true,
-		message: `Project status updated to ${status}`,
-		project
-	  });
-  
 	} catch (error) {
-	  res.status(500).json({
-		success: false,
-		message: 'Error updating project status',
-		error: error.message
-	  });
+		res.status(500).json({
+			success: false,
+			message: "Error updating project status",
+			error: error.message,
+		});
 	}
-  };
+};
+
+// ==================== PROJECT SEARCH & RECOMMENDATIONS ====================
+
+/**
+ * SEARCH PROJECTS - Advanced search with AI-powered recommendations
+ * Features: Skill matching, budget filtering, location-based search
+ */
+exports.searchProjects = async (req, res) => {
+	try {
+		const {
+			q: searchQuery,
+			skills,
+			minBudget,
+			maxBudget,
+			location,
+			duration,
+			experienceLevel,
+			status, // allow custom status
+			page = 1,
+			limit = 10,
+		} = req.query;
+
+		const userId = req.user?.id;
+		let query = {};
+
+		// Status filter (default to 'Open' if not specified)
+		if (status) {
+			query.status = status;
+		} else {
+			query.status = "Open";
+		}
+
+		// Text search
+		if (searchQuery) {
+			query.$text = { $search: searchQuery };
+		}
+
+		// Skills filter
+		if (skills) {
+			const skillIds = skills.split(",");
+			query["skills.skill"] = { $in: skillIds };
+		}
+
+		// Budget filter
+		if (minBudget || maxBudget) {
+			query.$and = query.$and || [];
+			if (minBudget) {
+				query.$and.push({
+					"budget.minAmount": { $gte: parseInt(minBudget) },
+				});
+			}
+			if (maxBudget) {
+				query.$and.push({
+					"budget.maxAmount": { $lte: parseInt(maxBudget) },
+				});
+			}
+		}
+
+		// Duration filter
+		if (duration) {
+			query.duration = duration;
+		}
+
+		// Experience level filter
+		if (experienceLevel) {
+			query["skills.experienceLevel"] = experienceLevel;
+		}
+
+		const skip = (page - 1) * limit;
+
+		let projects = await Project.find(query)
+			.populate("client", "firstName lastName avatar location")
+			.populate("Industry")
+			.populate("skills.skill", "name Industry")
+			// .populate("skills.skill", "name category")
+			.sort({ createdAt: -1 })
+			.skip(skip)
+			.limit(parseInt(limit));
+
+		if (userId) {
+			const user = await User.findById(userId);
+			if (user && user.role === "freelancer") {
+				projects = await this.personalizeProjectResults(projects, userId);
+			}
+		}
+
+		const totalProjects = await Project.countDocuments(query);
+
+		res.json({
+			success: true,
+			projects,
+			pagination: {
+				currentPage: parseInt(page),
+				totalPages: Math.ceil(totalProjects / limit),
+				totalProjects,
+			},
+		});
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			message: "Error searching projects",
+			error: error.message,
+		});
+	}
+};
+
