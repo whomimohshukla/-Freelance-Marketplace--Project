@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../../Server/middleware/auth.middleware');
-const clientController = require('../controllers/client.controller');
+const clientController = require("../controllers/core-Project/client-Freelancing/client.controller");
 const isClient  = require('../middleware/auth.middleware');
 
 

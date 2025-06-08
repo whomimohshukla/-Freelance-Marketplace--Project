@@ -1,4 +1,4 @@
-const Industry = require('../models/industry.model');
+const Industry = require('../../../models/industry.model');
 const mongoose = require('mongoose');
 
 const isValidObjectId = (id) => mongoose.isValidObjectId(id);

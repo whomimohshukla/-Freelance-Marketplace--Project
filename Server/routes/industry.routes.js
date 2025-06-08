@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth.middleware');
 // const admin = require('../../middleware/admin');
-const industryController = require('../controllers/industry.controller');
+const industryController = require('../controllers/core-Project/Industry(category)/industry.controller');
 
 // Parent Industry Routes
 // @route   GET /api/industries/parents

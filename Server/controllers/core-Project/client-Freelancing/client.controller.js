@@ -1,4 +1,4 @@
-const ClientProfile = require('../models/client.model');
+const ClientProfile = require('../../../models/client.model');
 const mongoose = require('mongoose');
 
 // Helper function to validate ObjectId

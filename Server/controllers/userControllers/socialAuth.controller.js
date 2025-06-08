@@ -1,10 +1,10 @@
-const User = require("../models/user.model");
-const FreelancerProfile = require("../models/freelancer.model");
-const ClientProfile = require("../models/client.model");
+const User = require("../../models/user.model");
+const FreelancerProfile = require("../../models/freelancer.model");
+const ClientProfile = require("../../models/client.model");
 const jwt = require("jsonwebtoken");
 const axios = require("axios");
-const { getLocationInfo } = require("../utils/location");
-const emailService = require("../utils/emailServices");
+const { getLocationInfo } = require("../../utils/location");
+const emailService = require("../../utils/emailServices");
 
 // GitHub Authentication
 const githubAuth = async (req, res) => {

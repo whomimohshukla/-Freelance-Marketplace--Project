@@ -1,13 +1,14 @@
-const Project = require("../../models/project.model");
-const User = require("../../models/user.model");
-const IndustryData = require("../../models/industry.model");
-const Skill = require("../../models/skills.model");
 
-const FreelancerProfile = require("../../models/freelancer.model");
-const ClientProfile = require("../../models/client.model");
-const Team = require("../../models/teams.model");
-const Review = require("../../models/review.model");
-const Analytics = require("../../models/analytics.model");
+const Project = require("../../../models/project.model");
+const User = require("../../../models/user.model");
+const IndustryData = require("../../../models/industry.model");
+const Skill = require("../../../models/skills.model");
+
+const FreelancerProfile = require("../../../models/freelancer.model");
+const ClientProfile = require("../../../models/client.model");
+const Team = require("../../../models/teams.model");
+const Review = require("../../../models/review.model");
+const Analytics = require("../../../models/analytics.model");
 const mongoose = require("mongoose");
 
 /**

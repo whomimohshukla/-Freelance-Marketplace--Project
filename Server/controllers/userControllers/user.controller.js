@@ -1,21 +1,21 @@
-const User = require("../models/user.model");
+const User = require("../../models/user.model");
 // const OTP = require("../models/otp.model");
-const FreelancerProfile = require("../models/freelancer.model");
-const ClientProfile = require("../models/client.model");
+const FreelancerProfile = require("../../models/freelancer.model");
+const ClientProfile = require("../../models/client.model");
 const { OAuth2Client } = require("google-auth-library");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const speakeasy = require("speakeasy");
 const QRCode = require("qrcode");
 const crypto = require("crypto");
-const emailService = require("../utils/emailServices");
+const emailService = require("../../utils/emailServices");
 const {
 	getLocationInfo,
 	isSuspiciousLocation,
 	formatLocation,
-} = require("../utils/location");
-const OTP = require("../models/otp.model");
-const uploadToCloudinary = require("../utils/cloudinary");
+} = require("../../utils/location");
+const OTP = require("../../models/otp.model");
+const uploadToCloudinary = require("../../utils/cloudinary");
 
 const sendOTP = async (req, res) => {
 	const { email } = req.body;
