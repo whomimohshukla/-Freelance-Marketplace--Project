@@ -317,6 +317,8 @@ projectSchema.index({ status: 1 });
 projectSchema.index({ "skills.skill": 1 });
 projectSchema.index({ Industry: 1 });
 projectSchema.index({ "proposals.freelancer": 1 });
+projectSchema.index({ title: 'text', description: 'text' });
+
 
 // Middleware to update metrics
 projectSchema.pre("save", async function (next) {
