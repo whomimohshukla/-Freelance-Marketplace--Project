@@ -1134,3 +1134,409 @@ exports.searchProjects = async (req, res) => {
 	}
 };
 
+/**
+ * GET RECOMMENDED PROJECTS - AI-powered project recommendations for freelancers
+ * Features: Skill matching, past project analysis, success rate prediction
+ */
+
+exports.getRecommendedProjects = async (req, res) => {
+	try {
+		const freelancerId = req.user.id;
+
+		const { limit = 10 } = req.query;
+
+		// Get freelancer profile and skills
+		const freelancerProfile = await FreelancerProfile.findOne({
+			user: freelancerId,
+		}).populate("skills.skill");
+
+		console.log("Freelancer profile:", freelancerProfile);
+
+		if (!freelancerProfile) {
+			return res.status(404).json({
+				success: false,
+				message: "Freelancer profile not found",
+			});
+		}
+
+		// Extract freelancer skills
+		const freelancerSkills = freelancerProfile.skills.map((s) => s.skill._id);
+
+		// Find projects matching freelancer skills
+		const matchingProjects = await Project.find({
+			status: "Open",
+			"skills.skill": { $in: freelancerSkills },
+		})
+			.populate("client", "firstName lastName avatar")
+			.populate("category")
+			.populate("skills.skill", "name category")
+			.limit(parseInt(limit));
+
+		// Calculate match scores
+		const projectsWithScores = matchingProjects.map((project) => {
+			const matchScore = this.calculateProjectMatchScore(
+				project,
+				freelancerProfile
+			);
+			return {
+				...project.toObject(),
+				matchScore,
+				matchReasons: this.getMatchReasons(project, freelancerProfile),
+			};
+		});
+
+		// Sort by match score
+		projectsWithScores.sort((a, b) => b.matchScore - a.matchScore);
+
+		res.json({
+			success: true,
+			recommendedProjects: projectsWithScores,
+			total: projectsWithScores.length,
+		});
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			message: "Error getting recommended projects",
+			error: error.message,
+		});
+	}
+};
+
+// ==================== HELPER METHODS ====================
+
+/**
+ * Check if user can view project
+ */
+
+exports.canViewProject = async (userId, project) => {
+	// Project owner (client) can always view
+	if (project.client._id.toString() === userId) return true;
+
+	// Selected freelancer can view
+	if (project.selectedFreelancer?.toString() === userId) return true;
+
+	// Freelancers who submitted proposals can view
+	const hasProposal = project.proposals.some(
+		(p) => p.freelancer.toString() === userId
+	);
+	if (hasProposal) return true;
+
+	// Public projects can be viewed by anyone (when status is Open)
+	if (project.status === "Open") return true;
+
+	return false;
+};
+
+// /**
+//  * Get match reasons for project recommendation
+//  */
+// exports.getMatchReasons = (project, freelancerProfile) => {
+// 	const reasons = [];
+
+// 	// Skill matches
+// 	const projectSkills = project.skills.map((s) => s.skill.name);
+// 	const freelancerSkills = freelancerProfile.skills.map((s) => s.skill.name);
+// 	const matchingSkills = projectSkills.filter((skill) =>
+// 		freelancerSkills.includes(skill)
+// 	);
+
+// 	if (matchingSkills.length > 0) {
+// 		reasons.push(`Matches your skills: ${matchingSkills.join(", ")}`);
+// 	}
+
+// 	// Budget compatibility
+// 	if (project.budget.type === "Hourly") {
+// 		const rate = freelancerProfile.hourlyRate;
+// 		if (
+// 			rate >= project.budget.minAmount &&
+// 			rate <= project.budget.maxAmount
+// 		) {
+// 			reasons.push("Budget matches your hourly rate");
+// 		} else if (rate <= project.budget.maxAmount * 1.2) {
+// 			reasons.push("Budget is close to your hourly rate");
+// 		}
+// 	} else {
+// 		reasons.push("Fixed price project opportunity");
+// 	}
+
+// 	// High rating advantage
+// 	if (freelancerProfile.rating.average >= 4.5) {
+// 		reasons.push("Your excellent rating gives you an advantage");
+// 	} else if (freelancerProfile.rating.average >= 4.0) {
+// 		reasons.push("Your good rating is competitive");
+// 	}
+
+// 	// Experience level matching
+// 	const hasMatchingExperience = project.skills.some((projectSkill) => {
+// 		const freelancerSkill = freelancerProfile.skills.find(
+// 			(fs) => fs.skill._id.toString() === projectSkill.skill._id.toString()
+// 		);
+// 		return (
+// 			freelancerSkill &&
+// 			this.compareExperienceLevels(
+// 				freelancerSkill.experienceLevel,
+// 				projectSkill.experienceLevel
+// 			)
+// 		);
+// 	});
+
+// 	if (hasMatchingExperience) {
+// 		reasons.push("Your experience level matches project requirements");
+// 	}
+
+// 	// Project urgency
+// 	const daysUntilStart = project.startDate
+// 		? Math.ceil(
+// 				(new Date(project.startDate) - new Date()) / (1000 * 60 * 60 * 24)
+// 		  )
+// 		: null;
+
+// 	if (daysUntilStart && daysUntilStart <= 7) {
+// 		reasons.push("Urgent project - quick start needed");
+// 	} else if (daysUntilStart && daysUntilStart <= 30) {
+// 		reasons.push("Starting soon - good timing");
+// 	}
+
+// 	// Project duration match
+// 	if (project.duration === "Less than 1 month") {
+// 		reasons.push("Short-term project - quick completion");
+// 	} else if (project.duration === "More than 6 months") {
+// 		reasons.push("Long-term project - stable work opportunity");
+// 	}
+
+// 	// Low competition indicator
+// 	if (project.metrics.proposals < 5) {
+// 		reasons.push("Low competition - fewer proposals submitted");
+// 	}
+
+// 	return reasons;
+// };
+
+// /**
+//  * Compare experience levels for matching
+//  * Returns true if freelancer's experience meets or exceeds project requirement
+//  */
+// exports.compareExperienceLevels = (freelancerLevel, projectLevel) => {
+// 	const levels = {
+// 		Beginner: 1,
+// 		Intermediate: 2,
+// 		Expert: 3,
+// 	};
+
+// 	const freelancerScore = levels[freelancerLevel] || 0;
+// 	const projectScore = levels[projectLevel] || 0;
+
+// 	// Freelancer's experience should meet or exceed project requirement
+// 	return freelancerScore >= projectScore;
+// };
+
+// /**
+//  * Personalize project results based on freelancer preferences and history
+//  */
+// exports.personalizeProjectResults = async (projects, freelancerId) => {
+// 	try {
+// 		// Get freelancer's application history
+// 		const freelancerApplications = await Project.find({
+// 			"proposals.freelancer": freelancerId,
+// 		}).select("category skills budget.type");
+
+// 		// Get freelancer profile
+// 		const freelancerProfile = await FreelancerProfile.findOne({
+// 			user: freelancerId,
+// 		});
+
+// 		if (!freelancerProfile) return projects;
+
+// 		// Calculate personalization scores
+// 		const personalizedProjects = projects.map((project) => {
+// 			let personalizationScore = 0;
+
+// 			// Historical category preference
+// 			const appliedCategories = freelancerApplications.map((p) =>
+// 				p.category?.toString()
+// 			);
+// 			if (appliedCategories.includes(project.category?._id.toString())) {
+// 				personalizationScore += 20;
+// 			}
+
+// 			// Budget type preference
+// 			const appliedBudgetTypes = freelancerApplications.map(
+// 				(p) => p.budget.type
+// 			);
+// 			const budgetTypeFrequency = appliedBudgetTypes.reduce((acc, type) => {
+// 				acc[type] = (acc[type] || 0) + 1;
+// 				return acc;
+// 			}, {});
+
+// 			const mostPreferredBudgetType = Object.keys(
+// 				budgetTypeFrequency
+// 			).reduce(
+// 				(a, b) => (budgetTypeFrequency[a] > budgetTypeFrequency[b] ? a : b),
+// 				""
+// 			);
+
+// 			if (project.budget.type === mostPreferredBudgetType) {
+// 				personalizationScore += 15;
+// 			}
+
+// 			// Skill specialization bonus
+// 			const freelancerSkillIds = freelancerProfile.skills.map((s) =>
+// 				s.skill.toString()
+// 			);
+// 			const projectSkillIds = project.skills.map((s) =>
+// 				s.skill._id.toString()
+// 			);
+// 			const skillOverlap = projectSkillIds.filter((id) =>
+// 				freelancerSkillIds.includes(id)
+// 			).length;
+// 			const skillSpecializationScore =
+// 				(skillOverlap / projectSkillIds.length) * 25;
+// 			personalizationScore += skillSpecializationScore;
+
+// 			// Recent activity bonus
+// 			const daysSinceCreated = Math.ceil(
+// 				(new Date() - new Date(project.createdAt)) / (1000 * 60 * 60 * 24)
+// 			);
+// 			if (daysSinceCreated <= 3) {
+// 				personalizationScore += 10; // Boost new projects
+// 			}
+
+// 			return {
+// 				...project.toObject(),
+// 				personalizationScore: Math.round(personalizationScore),
+// 			};
+// 		});
+
+// 		// Sort by personalization score (descending)
+// 		return personalizedProjects.sort(
+// 			(a, b) => b.personalizationScore - a.personalizationScore
+// 		);
+// 	} catch (error) {
+// 		console.error("Error personalizing project results:", error);
+// 		return projects; // Return original projects if personalization fails
+// 	}
+// };
+
+// /**
+//  * Track analytics for project-related actions
+//  */
+// exports.trackAnalytics = async (userId, eventType, data) => {
+// 	try {
+// 		const analyticsData = {
+// 			user: userId,
+// 			eventType,
+// 			data,
+// 			timestamp: new Date(),
+// 			userAgent: data.userAgent || "Unknown",
+// 			ipAddress: data.ipAddress || "Unknown",
+// 		};
+
+// 		await Analytics.create(analyticsData);
+// 	} catch (error) {
+// 		console.error("Error tracking analytics:", error);
+// 		// Don't throw error as analytics failure shouldn't break main functionality
+// 	}
+// };
+
+// /**
+//  * Get project statistics for dashboard
+//  */
+// exports.getProjectStats = async (req, res) => {
+// 	try {
+// 		const userId = req.user.id;
+// 		const userRole = req.user.role;
+
+// 		let stats = {};
+
+// 		if (userRole === "client") {
+// 			// Client statistics
+// 			const clientProjects = await Project.find({ client: userId });
+
+// 			stats = {
+// 				totalProjects: clientProjects.length,
+// 				activeProjects: clientProjects.filter(
+// 					(p) => p.status === "In Progress"
+// 				).length,
+// 				completedProjects: clientProjects.filter(
+// 					(p) => p.status === "Completed"
+// 				).length,
+// 				draftProjects: clientProjects.filter((p) => p.status === "Draft")
+// 					.length,
+// 				totalSpent: clientProjects.reduce(
+// 					(sum, p) => sum + (p.budget.paid || 0),
+// 					0
+// 				),
+// 				averageProjectValue:
+// 					clientProjects.length > 0
+// 						? clientProjects.reduce(
+// 								(sum, p) => sum + p.budget.maxAmount,
+// 								0
+// 						  ) / clientProjects.length
+// 						: 0,
+// 				totalProposalsReceived: clientProjects.reduce(
+// 					(sum, p) => sum + p.proposals.length,
+// 					0
+// 				),
+// 			};
+// 		} else if (userRole === "freelancer") {
+// 			// Freelancer statistics
+// 			const proposalsSubmitted = await Project.find({
+// 				"proposals.freelancer": userId,
+// 			});
+
+// 			const activeProjects = await Project.find({
+// 				selectedFreelancer: userId,
+// 				status: "In Progress",
+// 			});
+
+// 			const completedProjects = await Project.find({
+// 				selectedFreelancer: userId,
+// 				status: "Completed",
+// 			});
+
+// 			const acceptedProposals = proposalsSubmitted.filter((p) =>
+// 				p.proposals.some(
+// 					(prop) =>
+// 						prop.freelancer.toString() === userId &&
+// 						prop.status === "Accepted"
+// 				)
+// 			);
+
+// 			stats = {
+// 				totalProposals: proposalsSubmitted.length,
+// 				acceptedProposals: acceptedProposals.length,
+// 				activeProjects: activeProjects.length,
+// 				completedProjects: completedProjects.length,
+// 				successRate:
+// 					proposalsSubmitted.length > 0
+// 						? (
+// 								(acceptedProposals.length / proposalsSubmitted.length) *
+// 								100
+// 						  ).toFixed(1)
+// 						: 0,
+// 				totalEarned: completedProjects.reduce(
+// 					(sum, p) => sum + (p.budget.paid || 0),
+// 					0
+// 				),
+// 				averageProjectValue:
+// 					completedProjects.length > 0
+// 						? completedProjects.reduce(
+// 								(sum, p) => sum + p.budget.maxAmount,
+// 								0
+// 						  ) / completedProjects.length
+// 						: 0,
+// 			};
+// 		}
+
+// 		res.json({
+// 			success: true,
+// 			stats,
+// 		});
+// 	} catch (error) {
+// 		res.status(500).json({
+// 			success: false,
+// 			message: "Error fetching project statistics",
+// 			error: error.message,
+// 		});
+// 	}
+// };
