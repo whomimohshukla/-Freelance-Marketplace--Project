@@ -9,6 +9,8 @@ const Router = express.Router();
 Router.post("/create", auth, Project.createProject);
 
 Router.get("/", auth, Project.getAllProjects);
+Router.get("/search", auth, Project.searchProjects);
+Router.get("/recommendations", auth, Project.getRecommendedProjects);
 
 Router.get("/:projectId", auth, Project.getProjectById);
 
@@ -35,5 +37,22 @@ Router.put(
 );
 
 Router.put("/:projectId/status", auth, Project.updateProjectStatus);
+
+Router.get("/search", auth, Project.searchProjects);
+
+// Router.get("/:projectId/recommendations", auth, Project.getRecommendedProjects);
+Router.get("/recommendations", auth, Project.getRecommendedProjects);
+
+// Router.get("/:projectId/analytics", auth, Project.getProjectStats);
+
+// Router.get("/:projectId/match-reasons", auth, Project.getMatchReasons);
+
+// Router.Post("/:projectId/personalize", auth, Project.personalizeProjectResults);
+
+// Router.get("/:projectId/can-view", auth, Project.canViewProject);
+
+// Router.get("/stats ", auth, Project.getProjectStats);
+
+// Router.get("/", auth, Project.compareExperienceLevels);
 
 module.exports = Router;
