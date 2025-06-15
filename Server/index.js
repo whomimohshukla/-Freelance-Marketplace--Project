@@ -3,6 +3,7 @@ const cookieParser = require("cookie-parser");
 const app = express();
 const PORT = process.env.PORT || 3000;
 const morganizer = require("morgan");
+const statusMonitor = require("express-status-monitor");
 const database = require("../Server/config/database");
 const userRoutes = require("../Server/routes/user.routes");
 const projectRoutes = require("../Server/routes/projectCRUD.routes");
@@ -17,6 +18,7 @@ const ratingRoutes = require("../Server/routes/projectRating.routes");
 app.use(express.json());
 app.use(cookieParser());
 app.use(morganizer("dev"));
+app.use(statusMonitor());
 
 // connect db
 database.connectDB();
