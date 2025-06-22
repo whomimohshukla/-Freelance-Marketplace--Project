@@ -26,7 +26,7 @@ Router.put(
 	"/:projectId/proposals/:proposalId",
 	auth,
 	Project.updateProposalStatus
-);
+);;
 
 Router.post("/:projectId/milestones", auth, Project.createMilestone);
 

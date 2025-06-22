@@ -20,6 +20,8 @@ const uploadToCloudinary = require("../../utils/cloudinary");
 const sendOTP = async (req, res) => {
 	const { email } = req.body;
 
+	console.log(email);
+
 	if (!email) {
 		res.status(400).json({ message: "Email is required" });
 		return;
@@ -110,7 +112,7 @@ const resendOTP = async (req, res) => {
 
 const signup = async (req, res) => {
 	try {
-		const { email, password, firstName, lastName, role,otp } = req.body;
+		const { email, password, firstName, lastName, role, otp } = req.body;
 
 		if (!email || !password || !firstName || !lastName || !role || !otp) {
 			return res.status(400).json({
@@ -137,15 +139,15 @@ const signup = async (req, res) => {
 		}
 		// check if otp is valid
 		const recentOtp = await OTP.findOne({ email })
-		.sort({ createdAt: -1 })
-		.limit(1);
-	  // check the otp and recent otp (macthes from db and recent)
-	  if (!recentOtp || recentOtp.otp !== otp) {
-		return res.status(400).json({ message: "Invalid OTP" });
-	  }
-  
-	  // hash the password
-	  const hashedPassword = await bcrypt.hash(password, 10);
+			.sort({ createdAt: -1 })
+			.limit(1);
+		// check the otp and recent otp (macthes from db and recent)
+		if (!recentOtp || recentOtp.otp !== otp) {
+			return res.status(400).json({ message: "Invalid OTP" });
+		}
+
+		// hash the password
+		const hashedPassword = await bcrypt.hash(password, 10);
 
 		const ip = req.ip || req.connection.remoteAddress;
 		const locationInfo = getLocationInfo(ip);
@@ -271,7 +273,8 @@ const login = async (req, res) => {
 			return res.json({
 				success: true,
 				requireSecurityUpgrade: true,
-				message: "Suspicious login detected. Please set up 2FA to continue.",
+				message:
+					"Suspicious login detected. Please set up 2FA to continue.",
 				userId: user._id,
 			});
 		}
@@ -315,10 +318,9 @@ const login = async (req, res) => {
 		}
 
 		// Return success response with user data
-		res
-			.cookie("token", token, {
-				expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-			})
+		res.cookie("token", token, {
+			expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+		})
 			.status(201)
 			.json({
 				success: true,
@@ -863,8 +865,14 @@ const googleLogin = async (req, res) => {
 			});
 		}
 
-		const { email, email_verified, given_name, family_name, picture, locale } =
-			payload;
+		const {
+			email,
+			email_verified,
+			given_name,
+			family_name,
+			picture,
+			locale,
+		} = payload;
 
 		if (!email_verified) {
 			return res.status(400).json({

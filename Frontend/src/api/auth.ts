@@ -1,5 +1,8 @@
-import axios from 'axios';
+import http from './http';
 
+// Reuse the shared axios instance configured in http.ts – no need to import axios directly
+// If you ever need a fully-custom instance for a specific call you can create it here.
+// import axios from 'axios';
 // Register a new user
 export const registerUser = (data: {
   firstName: string;
@@ -10,15 +13,19 @@ export const registerUser = (data: {
   skills: string[];
   hourlyRate?: number;
   otp: string;
-}) => axios.post('/api/v1/users/signup', data);
+}) => http.post('v1/users/signup', data);
+
+
+
 
 // Send OTP to email
-export const sendOtp = (email: string) => axios.post('/api/v1/users/send-otp', { email });
+export const sendOtp = (email: string) => http.post('/v1/users/send-otp', { email });
+
 
 // Resend OTP to email
-export const resendOtp = (email: string) => axios.post('/api/v1/users/resend-otp', { email });
+export const resendOtp = (email: string) => http.post('/v1/users/resend-otp', { email });
 
 // Login user
-export const loginUser = (data: { email: string; password: string }) => axios.post('/api/auth/login', data);
+export const loginUser = (data: { email: string; password: string }) => http.post('/auth/login', data);
 
 // Add more auth-related API calls as needed

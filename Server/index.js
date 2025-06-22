@@ -14,6 +14,7 @@ const industryRoutes = require("../Server/routes/industry.routes");
 const teamRoutes = require("../Server/routes/team.routes");
 const reviewRoutes = require("../Server/routes/reviewFreelancer.routes");
 const ratingRoutes = require("../Server/routes/projectRating.routes");
+const cors = require("cors");
 
 app.use(express.json());
 app.use(cookieParser());
@@ -22,6 +23,15 @@ app.use(statusMonitor());
 
 // connect db
 database.connectDB();
+
+//cors
+app.use(
+	cors({
+		origin: "http://localhost:5173", // React dev server
+		methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+		credentials: true, // allow cookies / auth headers
+	})
+);
 
 // mount route to server
 app.use("/api/v1/users", userRoutes);
