@@ -1,6 +1,7 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Navbar from './components/layout/Navbar';
+import CookieConsentBanner from './components/CookieConsentBanner';
 import Footer from './components/layout/Footer';
 
 function App() {
@@ -11,6 +12,7 @@ function App() {
         <Outlet />
       </main>
       <Footer />
+      <CookieConsentBanner />
     </div>
   );
 }
