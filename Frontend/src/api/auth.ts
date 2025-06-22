@@ -26,6 +26,6 @@ export const sendOtp = (email: string) => http.post('/v1/users/send-otp', { emai
 export const resendOtp = (email: string) => http.post('/v1/users/resend-otp', { email });
 
 // Login user
-export const loginUser = (data: { email: string; password: string }) => http.post('/auth/login', data);
+export const loginUser = (data: { email: string; password: string }) => http.post('/v1/users/login', data);
 
 // Add more auth-related API calls as needed
