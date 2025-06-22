@@ -21,6 +21,8 @@ import Community from "./pages/Community";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import CookiePolicy from "./pages/CookiePolicy";
+import ProfileView from "./pages/ProfileView";
+import ProfileSettings from "./pages/ProfileSettings";
 
 export const router = createBrowserRouter([
   {
@@ -119,6 +121,14 @@ export const router = createBrowserRouter([
         path: "/cookie-policy",
         element: <CookiePolicy />,
       },
+      {
+        path: "/profile/:username",
+        element: <ProfileView />,
+      },
+      {
+        path: "/settings/profile",
+        element: <ProfileSettings />,
+      }
     ],
   },
 ]);

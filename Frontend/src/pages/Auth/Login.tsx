@@ -21,7 +21,7 @@ const Login = () => {
       if (data.success) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
-        navigate('/dashboard');
+        navigate('/settings/profile');
       } else {
         setError(data.message || 'Login failed');
       }
