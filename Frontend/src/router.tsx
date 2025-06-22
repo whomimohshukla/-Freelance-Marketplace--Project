@@ -23,6 +23,9 @@ import TermsOfService from "./pages/TermsOfService";
 import CookiePolicy from "./pages/CookiePolicy";
 import ProfileView from "./pages/ProfileView";
 import ProfileSettings from "./pages/ProfileSettings";
+import Orders from "./pages/Orders";
+import Earnings from "./pages/Earnings";
+import HelpCenterPage from "./pages/HelpCenterPage";
 
 export const router = createBrowserRouter([
   {
@@ -128,6 +131,18 @@ export const router = createBrowserRouter([
       {
         path: "/settings/profile",
         element: <ProfileSettings />,
+      },
+      {
+        path: "/orders",
+        element: <Orders />,
+      },
+      {
+        path: "/earnings",
+        element: <Earnings />,
+      },
+      {
+        path: "/help-center",
+        element: <HelpCenterPage />,
       }
     ],
   },

@@ -1,10 +1,12 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { loginUser } from '../../api/auth'
+import { useAuth } from '../../context/AuthContext'
 import { motion } from 'framer-motion'
 import { FaGoogle, FaGithub, FaLinkedin } from 'react-icons/fa'
 
 const Login = () => {
+  const { login: ctxLogin } = useAuth();
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
@@ -19,8 +21,8 @@ const Login = () => {
     try {
       const { data } = await loginUser({ email, password });
       if (data.success) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
+        // update auth context
+        await ctxLogin({ email, password });
         navigate('/settings/profile');
       } else {
         setError(data.message || 'Login failed');
