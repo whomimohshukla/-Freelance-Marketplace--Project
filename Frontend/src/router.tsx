@@ -6,6 +6,7 @@ import FindTalent from "./components/features/FindTalent";
 import Home from "./pages/Home";
 import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";
+import VerifyOtp from "./pages/Auth/VerifyOtp";
 import BecomeFreelancer from "./pages/BecomeFreelancer";
 import GuideComponent from "./components/features/Guide";
 import HelpCenter from "./components/features/HelpCenter";
@@ -85,6 +86,10 @@ export const router = createBrowserRouter([
       {
         path: "/register",
         element: <Register />,
+      },
+      {
+        path: "/verify-otp",
+        element: <VerifyOtp />,
       },
       {
         path: "/create-profile",

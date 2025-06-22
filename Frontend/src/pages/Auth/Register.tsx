@@ -2,7 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion'
 import { FaGoogle, FaGithub, FaLinkedin } from 'react-icons/fa'
-import { registerUser, sendOtp as apiSendOtp, resendOtp as apiResendOtp } from '../../api/auth'
+import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai'
+import { sendOtp as apiSendOtp, resendOtp as apiResendOtp } from '../../api/auth'
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -24,19 +25,11 @@ const Register = () => {
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
 
-  // OTP state
-  const [otpSent, setOtpSent] = useState(false)
-  const [otpLoading, setOtpLoading] = useState(false)
-  const [otpError, setOtpError] = useState('');
-  const [otpSuccess, setOtpSuccess] = useState('');
-  const [emailError, setEmailError] = useState('');
-  const [resendCooldown, setResendCooldown] = useState(0)
-  const resendTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Helper: validate email
   const isValidEmail = (email: string) => /.+@.+\..+/.test(email)
 
-  // Fetch skill suggestions as user types
   useEffect(() => {
     if (skillsInput.trim().length === 0) {
       setSuggestedSkills([]);
@@ -55,83 +48,6 @@ const Register = () => {
     fetchSuggestions();
     return () => { ignore = true; };
   }, [skillsInput]);
-
-  // Send OTP function
-  const sendOtp = async (email: string) => {
-    if (!isValidEmail(email)) return
-    setOtpLoading(true)
-    setOtpError('')
-    setOtpSuccess('')
-    setEmailError('')
-    try {
-      await apiSendOtp(email)
-      setOtpSent(true)
-      setOtpSuccess('OTP sent to your email.')
-      setResendCooldown(60)
-      if (resendTimerRef.current) clearInterval(resendTimerRef.current)
-      resendTimerRef.current = setInterval(() => {
-        setResendCooldown(prev => {
-          if (prev <= 1) {
-            if (resendTimerRef.current) clearInterval(resendTimerRef.current)
-            return 0
-          }
-          return prev - 1
-        })
-      }, 1000)
-    } catch (err: any) {
-      const errorMsg = err.response?.data?.error || 'Failed to send OTP'
-      setOtpError(errorMsg)
-      // Show specific error if user already exists
-      if (errorMsg.toLowerCase().includes('user already exists') || errorMsg.toLowerCase().includes('email already exists')) {
-        setEmailError('Email already exists.')
-      }
-    } finally {
-      setOtpLoading(false)
-    }
-  }
-
-  // Resend OTP function
-  const handleResendOtp = async () => {
-    if (!isValidEmail(formData.email)) {
-      setOtpError('Enter a valid email before resending OTP.')
-      return
-    }
-    setOtpLoading(true)
-    setOtpError('')
-    setOtpSuccess('')
-    setEmailError('')
-    try {
-      await apiResendOtp(formData.email)
-      setOtpSuccess('OTP resent to your email.')
-      setResendCooldown(60)
-      if (resendTimerRef.current) clearInterval(resendTimerRef.current)
-      resendTimerRef.current = setInterval(() => {
-        setResendCooldown(prev => {
-          if (prev <= 1) {
-            if (resendTimerRef.current) clearInterval(resendTimerRef.current)
-            return 0
-          }
-          return prev - 1
-        })
-      }, 1000)
-    } catch (err: any) {
-      const errorMsg = err.response?.data?.error || 'Failed to resend OTP'
-      setOtpError(errorMsg)
-      // Show specific error if user already exists
-      if (errorMsg.toLowerCase().includes('user already exists') || errorMsg.toLowerCase().includes('email already exists')) {
-        setEmailError('Email already exists.')
-      }
-    } finally {
-      setOtpLoading(false)
-    }
-  }
-
-  // Auto-send OTP on email blur if valid and not already sent
-  const handleEmailBlur = async () => {
-    if (isValidEmail(formData.email) && !otpSent) {
-      sendOtp(formData.email)
-    }
-  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -159,7 +75,6 @@ const Register = () => {
     setError('')
     setSuccess('')
 
-    // Client-side validation
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match')
       setLoading(false)
@@ -170,48 +85,14 @@ const Register = () => {
       setLoading(false)
       return
     }
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.otp) {
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
       setError('Please fill all required fields')
       setLoading(false)
       return
     }
     try {
-      const payload = {
-        email: formData.email,
-        password: formData.password,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        role: formData.role,
-        skills: formData.skills,
-        hourlyRate: formData.hourlyRate ? Number(formData.hourlyRate) : undefined,
-        otp: formData.otp
-      }
-      const response = await registerUser(payload)
-      if (response.data.success) {
-        setSuccess('Registration successful!')
-        // Store token if returned (adjust key as per backend response)
-        if (response.data && response.data.token) {
-          localStorage.setItem('token', response.data.token);
-        }
-        // Clear form
-        setFormData({
-          firstName: '',
-          lastName: '',
-          email: '',
-          password: '',
-          confirmPassword: '',
-          role: 'freelancer',
-          skills: [] as string[],
-          hourlyRate: '',
-          otp: ''
-        })
-        // Redirect to home after short delay
-        setTimeout(() => {
-          navigate('/');
-        }, 1000);
-      } else {
-        setError(response.data.error || 'Registration failed')
-      }
+      const { otp, ...details } = formData;
+      navigate('/verify-otp', { state: details });
     } catch (err: any) {
       setError(err.response?.data?.error || 'An error occurred')
     } finally {
@@ -220,13 +101,11 @@ const Register = () => {
   }
 
   const handleSocialSignup = (provider: string) => {
-    // Handle social signup logic here
     console.log(`Signing up with ${provider}`)
   }
 
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden mt-24">
-      {/* Animated background elements */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,#00f5c410,transparent_50%)]"></div>
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px)] bg-[size:64px] bg-opacity-20"></div>
@@ -235,7 +114,6 @@ const Register = () => {
       </div>
       
       <div className="relative max-w-xl w-full">
-        {/* Glowing orb effects */}
         <div className="absolute -top-20 -left-20 w-64 h-64 bg-code-green/10 rounded-full blur-3xl"></div>
         <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-code-green/10 rounded-full blur-3xl"></div>
         
@@ -286,9 +164,8 @@ const Register = () => {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="firstName" className="block text-sm font-medium text-gray-300 mb-2">
-                      First Name
-                    </label>
+                    <label htmlFor="firstName" className="block text-sm font-medium text-gray-300 mb-2">First Name</label>
+  
                     <input
                       id="firstName"
                       name="firstName"
@@ -301,9 +178,8 @@ const Register = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="lastName" className="block text-sm font-medium text-gray-300 mb-2">
-                      Last Name
-                    </label>
+                    <label htmlFor="lastName" className="block text-sm font-medium text-gray-300 mb-2">Last Name</label>
+  
                     <input
                       id="lastName"
                       name="lastName"
@@ -317,9 +193,7 @@ const Register = () => {
                   </div>
                 </div>
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-                    Email address
-                  </label>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">Email address</label>
                   <input
                     id="email"
                     name="email"
@@ -328,17 +202,14 @@ const Register = () => {
                     required
                     value={formData.email}
                     onChange={handleChange}
-                    onBlur={handleEmailBlur}
                     className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-code-green focus:border-transparent transition-all duration-200"
                     placeholder="name@company.com"
                   />
-                  {emailError && <p className="text-red-500 text-sm mt-1">{emailError}</p>}
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="skills" className="block text-sm font-medium text-gray-300 mb-2">
-                      Skills <span className="text-xs text-gray-400">(comma separated)</span>
-                    </label>
+                    <label htmlFor="skills" className="block text-sm font-medium text-gray-300 mb-2">Skills <span className="text-xs text-gray-400">(comma separated)</span></label>
+  
                     <div className="relative">
   <input
     id="skills"
@@ -404,9 +275,8 @@ const Register = () => {
 </div>
                   </div>
                   <div>
-                    <label htmlFor="hourlyRate" className="block text-sm font-medium text-gray-300 mb-2">
-                      Hourly Rate ($)
-                    </label>
+                    <label htmlFor="hourlyRate" className="block text-sm font-medium text-gray-300 mb-2">Hourly Rate ($)</label>
+  
                     <input
                       id="hourlyRate"
                       name="hourlyRate"
@@ -419,105 +289,95 @@ const Register = () => {
                     />
                   </div>
                 </div>
-                <div>
-                  <label htmlFor="otp" className="block text-sm font-medium text-gray-300 mb-2">
-                    OTP
-                  </label>
-                  <div className="flex gap-2 items-center">
-                    <input
-                      id="otp"
-                      name="otp"
-                      type="text"
-                      required
-                      value={formData.otp}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-code-green focus:border-transparent transition-all duration-200"
-                      placeholder="Enter OTP"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleResendOtp}
-                      disabled={otpLoading || resendCooldown > 0}
-                      className={`px-4 py-2 rounded-xl border font-semibold text-xs transition-all duration-200 ${otpLoading || resendCooldown > 0 ? 'bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-code-green text-black hover:bg-code-green/90'}`}
-                    >
-                      {otpLoading ? 'Sending...' : resendCooldown > 0 ? `Resend (${resendCooldown}s)` : 'Resend OTP'}
-                    </button>
-                  </div>
-                  {otpError && <div className="text-red-500 text-xs mt-1">{otpError}</div>}
-                  {otpSuccess && <div className="text-green-500 text-xs mt-1">{otpSuccess}</div>}
-                </div>
-                <div className="mb-4">
-                  <label htmlFor="password" className="block mb-1">Password</label>
-                  <input
-                    type="password"
-                    id="password"
-                    value={formData.password}
-                    onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                    className="w-full px-3 py-2 rounded bg-gray-700 text-white focus:outline-none"
-                    required
-                  />
-                  {formData.password && formData.password.length > 0 && formData.password.length < 8 && (
-                    <p className="text-red-500 text-sm mt-1">Password must be at least 8 characters.</p>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
-                    Confirm Password
-                  </label>
-                  <input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type="password"
-                    required
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-code-green focus:border-transparent transition-all duration-200"
-                    placeholder="••••••••"
-                  />
-                </div>
-              </div>
 
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Account Type
-                </label>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="relative">
-                    <input
-                      type="radio"
-                      id="freelancer"
-                      name="role"
-                      value="freelancer"
-                      checked={formData.role === 'freelancer'}
-                      onChange={handleChange}
-                      className="peer sr-only"
-                    />
-                    <label
-                      htmlFor="freelancer"
-                      className="flex items-center justify-center p-3 w-full text-gray-400 bg-gray-800/50 border border-gray-700 rounded-xl cursor-pointer peer-checked:border-code-green peer-checked:text-code-green hover:bg-gray-800 transition-all duration-200"
-                    >
-                      Freelancer
-                    </label>
-                  </div>
-                  <div className="relative">
-                    <input
-                      type="radio"
-                      id="client"
-                      name="role"
-                      value="client"
-                      checked={formData.role === 'client'}
-                      onChange={handleChange}
-                      className="peer sr-only"
-                    />
-                    <label
-                      htmlFor="client"
-                      className="flex items-center justify-center p-3 w-full text-gray-400 bg-gray-800/50 border border-gray-700 rounded-xl cursor-pointer peer-checked:border-code-green peer-checked:text-code-green hover:bg-gray-800 transition-all duration-200"
-                    >
-                      Client
-                    </label>
-                  </div>
-                </div>
-              </div>
+                <div className="mb-4">
+  <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">Password</label>
+  <div className="relative">
+    <input
+      id="password"
+      name="password"
+      type={showPassword ? 'text' : 'password'}
+      required
+      value={formData.password}
+      onChange={e => setFormData(prev => ({ ...prev, password: e.target.value }))}
+      className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-code-green focus:border-transparent transition-all duration-200"
+      placeholder="••••••••"
+    />
+    <button
+      type="button"
+      onClick={() => setShowPassword(prev => !prev)}
+      className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-code-green"
+    >
+      {showPassword ? <AiOutlineEyeInvisible size={20} /> : <AiOutlineEye size={20} />}
+    </button>
+  </div>
+  {formData.password && formData.password.length > 0 && formData.password.length < 8 && (
+    <p className="text-red-500 text-sm mt-1">Password must be at least 8 characters.</p>
+  )}
+</div>
+
+<div className="mb-4">
+  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">Confirm Password</label>
+  <div className="relative">
+    <input
+      id="confirmPassword"
+      name="confirmPassword"
+      type={showConfirmPassword ? 'text' : 'password'}
+      required
+      value={formData.confirmPassword}
+      onChange={handleChange}
+      className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-code-green focus:border-transparent transition-all duration-200"
+      placeholder="••••••••"
+    />
+    <button
+      type="button"
+      onClick={() => setShowConfirmPassword(prev => !prev)}
+      className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-code-green"
+    >
+      {showConfirmPassword ? <AiOutlineEyeInvisible size={20} /> : <AiOutlineEye size={20} />}
+    </button>
+  </div>
+</div>
+
+<div className="space-y-2">
+  <label className="block text-sm font-medium text-gray-300 mb-2">Account Type</label>
+  <div className="grid grid-cols-2 gap-4">
+    <div className="relative">
+      <input
+        type="radio"
+        id="freelancer"
+        name="role"
+        value="freelancer"
+        checked={formData.role === 'freelancer'}
+        onChange={handleChange}
+        className="peer sr-only"
+      />
+      <label
+        htmlFor="freelancer"
+        className="flex items-center justify-center p-3 w-full text-gray-400 bg-gray-800/50 border border-gray-700 rounded-xl cursor-pointer peer-checked:border-code-green peer-checked:text-code-green hover:bg-gray-800 transition-all duration-200"
+      >
+        Freelancer
+      </label>
+    </div>
+    <div className="relative">
+      <input
+        type="radio"
+        id="client"
+        name="role"
+        value="client"
+        checked={formData.role === 'client'}
+        onChange={handleChange}
+        className="peer sr-only"
+      />
+      <label
+        htmlFor="client"
+        className="flex items-center justify-center p-3 w-full text-gray-400 bg-gray-800/50 border border-gray-700 rounded-xl cursor-pointer peer-checked:border-code-green peer-checked:text-code-green hover:bg-gray-800 transition-all duration-200"
+      >
+        Client
+      </label>
+    </div>
+  </div>
+</div>
 
               {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
               {success && <div className="text-green-500 text-sm mb-2">Registration successful!</div>}
@@ -529,6 +389,7 @@ const Register = () => {
               >
                 {loading ? 'Creating Account...' : 'Create Account'}
               </button>
+          </div>
             </form>
 
             <p className="text-center text-xs text-gray-400">
