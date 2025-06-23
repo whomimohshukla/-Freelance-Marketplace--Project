@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FiChevronDown, FiLogOut, FiUser, FiGift, FiBookOpen, FiBriefcase } from 'react-icons/fi';
+import { FiChevronDown, FiLogOut, FiUser, FiGift, FiBookOpen, FiBriefcase, FiBell, FiMessageSquare, FiHeart } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 
@@ -84,21 +84,60 @@ const Navbar: React.FC = () => {
           {/* User section */}
           {user ? (
             <div className="hidden md:flex md:items-center md:space-x-4 relative group">
-              <img src={avatarUrl} alt="avatar" className="w-8 h-8 rounded-full border-2 border-accent cursor-pointer" />
+              <button className="relative text-gray-400 hover:text-white focus:outline-none mr-2">
+                <FiBell className="h-5 w-5" />
+                <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1 text-[10px] font-bold leading-none text-white bg-code-green rounded-full">3</span>
+              </button>
+              <button className="relative text-gray-400 hover:text-white focus:outline-none mr-2">
+                <FiMessageSquare className="h-5 w-5" />
+              </button>
+              <button className="relative text-gray-400 hover:text-white focus:outline-none mr-2">
+                <FiHeart className="h-5 w-5" />
+              </button>
+              <div className="relative group">
+                <img src={avatarUrl} alt="avatar" className="w-8 h-8 rounded-full object-cover cursor-pointer" />
+                <span className="absolute inset-0 rounded-full ring-2 ring-code-green/70 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
               {/* Dropdown */}
-              <div className="absolute right-0 mt-12 w-64 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+              <div className="absolute right-4 top-12 w-72 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-gray-900/90 backdrop-blur-xl rounded-2xl border border-gray-800/60 ring-1 ring-code-green/20 shadow-2xl" />
-                  <div className="relative py-2 px-3 space-y-1">
-                    <Link to={`/profile/${user.firstName ?? user._id}`} className="flex items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg"><FiUser /> Profile</Link>
-                    <Link to="/orders" className="flex items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg"><FiBriefcase /> Orders</Link>
-                    <Link to="/earnings" className="flex items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg"><FiBookOpen /> Earnings</Link>
-                    <Link to="/help-center" className="flex items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg">Help Center</Link>
-                    <Link to="/briefs" className="flex items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg"><FiBookOpen /> My Briefs</Link>
-                    <Link to="/refer-friend" className="flex items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg"><FiGift /> Refer a Friend</Link>
-                    <Link to="/become-freelancer" className="flex items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg">Become a Seller</Link>
-                    <Link to="/settings/profile" className="flex items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg">Settings</Link>
-                    <button onClick={logout} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:text-white hover:bg-gray-800/50 rounded-lg"><FiLogOut /> Logout</button>
+                  <div className="absolute inset-0 bg-gray-900/95 backdrop-blur-xl rounded-2xl border border-gray-800/60 ring-1 ring-code-green/30 shadow-2xl" />
+                      {/* arrow */}
+                      <div className="absolute right-6 -top-2 w-4 h-4 rotate-45 bg-gray-900/95 border-t border-l border-gray-800/60 ring-1 ring-code-green/30" />
+                  <div className="relative divide-y divide-gray-800">
+                    {/* header */}
+                    <div className="px-4 py-4 flex items-center gap-3">
+                      <img src={avatarUrl} alt="avatar" className="w-10 h-10 rounded-full object-cover" />
+                      <div>
+                        <p className="text-sm font-semibold text-white leading-none">{user.firstName ?? 'User'}</p>
+                        <Link to={`/profile/${user.firstName ?? user._id}`} className="text-xs text-code-green hover:underline">View Profile</Link>
+                      </div>
+                    </div>
+
+                    {/* main links */}
+                    <div className="flex flex-col px-4 py-4 text-sm space-y-1 text-gray-100">
+                      {/* Buying */}
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-gray-400 text-[10px] uppercase tracking-wide mb-1">Buying</p>
+                        <Link to="/orders" className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-gray-800/60 truncate"><FiBriefcase /> Orders</Link>
+                        <Link to="/help-center" className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-gray-800/60 truncate">Help Center</Link>
+                        <Link to="/briefs" className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-gray-800/60 truncate"><FiBookOpen /> My Briefs</Link>
+                      </div>
+
+                      {/* Selling */}
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-gray-400 text-[10px] uppercase tracking-wide mb-1">Selling</p>
+                        <Link to="/earnings" className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-gray-800/60 truncate"><FiBookOpen /> Earnings</Link>
+                        <Link to="/become-freelancer" className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-gray-800/60 truncate">Become Seller</Link>
+                        <Link to="/refer-friend" className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-gray-800/60 truncate"><FiGift /> Refer a Friend</Link>
+                      </div>
+                    </div>
+
+                    {/* footer */}
+                    <div className="px-4 py-3 flex flex-col space-y-1">
+                      <Link to="/settings/profile" className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-gray-800/60 truncate">Settings</Link>
+                      <button onClick={logout} className="flex items-center gap-2 px-2 py-1 rounded-md text-red-400 hover:text-white hover:bg-gray-800/60"><FiLogOut /> Logout</button>
+                    </div>
                   </div>
                 </div>
               </div>
