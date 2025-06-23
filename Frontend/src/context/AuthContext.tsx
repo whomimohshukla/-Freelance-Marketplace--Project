@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { loginUser as apiLoginUser } from '../api/auth';
+import { logoutUser } from '../api/user';
 
 interface User {
   _id: string;
@@ -19,7 +20,7 @@ interface AuthContextValue {
   user: User | null;
   token: string | null;
   loading: boolean;
-  login: (creds: LoginCredentials) => Promise<void>;
+  login: (creds: LoginCredentials, remember: boolean) => Promise<void>;
   logout: () => void;
 }
 
@@ -32,8 +33,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Load from localStorage on mount
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
+    const storedToken = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const storedUser = localStorage.getItem('user') || sessionStorage.getItem('user');
 
     if (storedToken && storedUser) {
       setToken(storedToken);
@@ -42,13 +43,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(false);
   }, []);
 
-  const login = async (creds: LoginCredentials) => {
+  const login = async (creds: LoginCredentials, remember: boolean) => {
     setLoading(true);
     try {
       const { data } = await apiLoginUser(creds);
       if (data.success) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
+        const storage = remember ? localStorage : sessionStorage;
+        storage.setItem('token', data.token);
+        storage.setItem('user', JSON.stringify(data.user));
         setToken(data.token);
         setUser(data.user);
       } else {
@@ -59,9 +61,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try { await logoutUser(); } catch { /* ignore */ }
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
     setToken(null);
     setUser(null);
   };

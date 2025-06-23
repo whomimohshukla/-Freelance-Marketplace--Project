@@ -22,7 +22,7 @@ const Login = () => {
       const { data } = await loginUser({ email, password });
       if (data.success) {
         // update auth context
-        await ctxLogin({ email, password });
+        await ctxLogin({ email, password }, rememberMe);
         navigate('/settings/profile');
       } else {
         setError(data.message || 'Login failed');

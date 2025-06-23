@@ -25,6 +25,8 @@ import TermsOfService from "./pages/TermsOfService";
 import CookiePolicy from "./pages/CookiePolicy";
 import ProfileView from "./pages/ProfileView";
 import ProfileSettings from "./pages/ProfileSettings";
+import ChangePassword from "./pages/Settings/ChangePassword";
+import DeleteAccount from "./pages/Settings/DeleteAccount";
 import Orders from "./pages/Orders";
 import Earnings from "./pages/Earnings";
 import HelpCenterPage from "./pages/HelpCenterPage";
@@ -141,6 +143,19 @@ export const router = createBrowserRouter([
       {
         path: "/settings/profile",
         element: <ProfileSettings />,
+      },
+      {
+        path: "/settings/change-password",
+        element: <ChangePassword />,
+      },
+      {
+        path: "/settings/delete-account",
+        element: <DeleteAccount />,
+
+          },
+          {
+
+
       },
       {
         path: "/orders",
