@@ -1,7 +1,12 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { useLocation, useNavigate, Location } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { registerUser, resendOtp as apiResendOtp } from '../../api/auth';
+import React, { useEffect, useState, useRef } from "react";
+import { useLocation, useNavigate, Location } from "react-router-dom";
+import { motion } from "framer-motion";
+import {
+  registerUser,
+  resendOtp as apiResendOtp,
+  loginUser,
+} from "../../api/auth";
+import { useAuth } from "../../context/AuthContext";
 
 interface RegisterState {
   firstName: string;
@@ -9,26 +14,29 @@ interface RegisterState {
   email: string;
   password: string;
   confirmPassword: string;
-  role: 'freelancer' | 'client';
+  role: "freelancer" | "client";
   skills: string[];
   hourlyRate?: string;
 }
 
 const VerifyOtp: React.FC = () => {
+  const { login: ctxLogin } = useAuth();
   const navigate = useNavigate();
-  const { state } = useLocation() as Location & { state: RegisterState | undefined };
-  const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
+  const { state } = useLocation() as Location & {
+    state: RegisterState | undefined;
+  };
+  const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [resendCooldown, setResendCooldown] = useState(0);
   const resendTimer = useRef<NodeJS.Timeout | null>(null);
 
   // Redirect back to register if state is missing
   useEffect(() => {
     if (!state) {
-      navigate('/register');
+      navigate("/register");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -50,22 +58,25 @@ const VerifyOtp: React.FC = () => {
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+  const handleKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    index: number
+  ) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
   };
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    const otpString = otp.join('');
+    const otpString = otp.join("");
     if (otpString.length !== 6) {
-      setError('Please enter a valid 6-digit OTP');
+      setError("Please enter a valid 6-digit OTP");
       return;
     }
     if (!state) return;
     setLoading(true);
-    setError('');
+    setError("");
     try {
       const payload = {
         ...state,
@@ -74,14 +85,21 @@ const VerifyOtp: React.FC = () => {
       } as any;
       const response = await registerUser(payload);
       if (response.data.success) {
-        setSuccess('Email verified! Redirecting...');
-        if (response.data.token) localStorage.setItem('token', response.data.token);
-        setTimeout(() => navigate('/'), 1500);
+        setSuccess("Email verified! Logging you in...");
+        try {
+          await ctxLogin(
+            { email: state.email, password: state.password },
+            false
+          );
+          navigate("/");
+        } catch {
+          setError("Login failed");
+        }
       } else {
-        setError(response.data.error || 'Verification failed');
+        setError(response.data.error || "Verification failed");
       }
     } catch (err: any) {
-      setError(err.response?.data?.error || 'An error occurred');
+      setError(err.response?.data?.error || "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -90,10 +108,10 @@ const VerifyOtp: React.FC = () => {
   const handleResend = async () => {
     if (!state) return;
     setLoading(true);
-    setError('');
+    setError("");
     try {
       await apiResendOtp(state.email);
-      setSuccess('OTP resent to your email');
+      setSuccess("OTP resent to your email");
       setResendCooldown(60);
       if (resendTimer.current) clearInterval(resendTimer.current);
       resendTimer.current = setInterval(() => {
@@ -106,7 +124,7 @@ const VerifyOtp: React.FC = () => {
         });
       }, 1000);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to resend OTP');
+      setError(err.response?.data?.error || "Failed to resend OTP");
     } finally {
       setLoading(false);
     }
@@ -133,7 +151,9 @@ const VerifyOtp: React.FC = () => {
           transition={{ duration: 0.6 }}
           className="relative bg-gray-900/50 backdrop-blur-xl p-8 pt-10 rounded-2xl shadow-2xl border border-gray-800/50"
         >
-          <h2 className="text-2xl font-bold text-white text-center mb-6">Verify your Email</h2>
+          <h2 className="text-2xl font-bold text-white text-center mb-6">
+            Verify your Email
+          </h2>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="flex justify-between gap-2">
@@ -152,9 +172,15 @@ const VerifyOtp: React.FC = () => {
               ))}
             </div>
 
-            {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-            {success && <p className="text-green-500 text-sm text-center">{success}</p>}
-            {loading && <p className="text-gray-400 text-sm text-center">Processing...</p>}
+            {error && (
+              <p className="text-red-500 text-sm text-center">{error}</p>
+            )}
+            {success && (
+              <p className="text-green-500 text-sm text-center">{success}</p>
+            )}
+            {loading && (
+              <p className="text-gray-400 text-sm text-center">Processing...</p>
+            )}
 
             <button
               type="submit"
@@ -171,7 +197,9 @@ const VerifyOtp: React.FC = () => {
             disabled={loading || resendCooldown > 0}
             className="w-full mt-4 text-sm text-code-green disabled:text-gray-500"
           >
-            {resendCooldown > 0 ? `Resend OTP (${resendCooldown}s)` : 'Resend OTP'}
+            {resendCooldown > 0
+              ? `Resend OTP (${resendCooldown}s)`
+              : "Resend OTP"}
           </button>
         </motion.div>
       </div>

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { loginUser } from '../../api/auth'
 import { useAuth } from '../../context/AuthContext'
 import { motion } from 'framer-motion'
+import Spinner from '../../components/ui/Spinner'
 import { FaGoogle, FaGithub, FaLinkedin } from 'react-icons/fa'
 
 const Login = () => {
@@ -40,6 +41,12 @@ const Login = () => {
   }
 
   return (
+    <>
+      {loading && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+          <Spinner size={8} />
+        </div>
+      )}
     <div className="min-h-screen bg-gray-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,#00f5c410,transparent_50%)]"></div>
@@ -160,7 +167,7 @@ const Login = () => {
                 type="submit"
                 className="w-full flex justify-center py-3 px-4 rounded-xl text-black font-semibold bg-code-green hover:bg-code-green/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-code-green focus:ring-offset-gray-900 transition-all duration-200"
               >
-                {loading ? 'Signing in...' : 'Sign in'}
+                {loading ? (<Spinner size={5} className="mr-2" />) : 'Sign in'}
               </button>
             {error && <p className="text-red-500 text-sm text-center mt-2">{error}</p>}
             </form>
@@ -168,6 +175,7 @@ const Login = () => {
         </motion.div>
       </div>
     </div>
+  </>
   )
 }
 

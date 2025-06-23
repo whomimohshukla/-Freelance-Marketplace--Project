@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import Spinner from "../../components/ui/Spinner";
 import { FaGoogle, FaGithub, FaLinkedin } from "react-icons/fa";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { sendOtp as apiSendOtp } from "../../api/auth";
@@ -27,8 +28,6 @@ const Register = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-
 
   useEffect(() => {
     if (skillsInput.trim().length === 0) {
@@ -136,7 +135,19 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden mt-24">
+    <>
+      {loading && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+          <Spinner size={8} />
+        </div>
+      )}
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden mt-24">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,#00f5c410,transparent_50%)]"></div>
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px)] bg-[size:64px] bg-opacity-20"></div>
+          <div className="absolute inset-0 bg-[linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:64px] bg-opacity-20"></div>
+          <div className="absolute inset-0 bg-gradient-to-tl from-gray-900 via-gray-900/95 to-gray-900/50"></div>
+        </div>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,#00f5c410,transparent_50%)]"></div>
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px)] bg-[size:64px] bg-opacity-20"></div>
@@ -496,17 +507,13 @@ const Register = () => {
                     Registration successful!
                   </div>
                 )}
-                {loading && (
-                  <div className="text-gray-400 text-sm mb-2">
-                    Registering...
-                  </div>
-                )}
+                
                 <button
                   type="submit"
                   className="w-full flex justify-center py-3 px-4 rounded-xl text-black font-semibold bg-code-green hover:bg-code-green/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-code-green focus:ring-offset-gray-900 transition-all duration-200"
                   disabled={loading}
                 >
-                  {loading ? "Creating Account..." : "Create Account"}
+                  {loading ? (<Spinner size={5} className="mr-2" />) : "Create Account"}
                 </button>
               </div>
             </form>
@@ -531,6 +538,8 @@ const Register = () => {
         </motion.div>
       </div>
     </div>
+    </>
+
   );
 };
 
