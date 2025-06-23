@@ -7,6 +7,8 @@ import Home from "./pages/Home";
 import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";
 import VerifyOtp from "./pages/Auth/VerifyOtp";
+import ForgotPassword from "./pages/Auth/ForgotPassword";
+import ResetPassword from "./pages/Auth/ResetPassword";
 import BecomeFreelancer from "./pages/BecomeFreelancer";
 import GuideComponent from "./components/features/Guide";
 import HelpCenter from "./components/features/HelpCenter";
@@ -87,6 +89,14 @@ export const router = createBrowserRouter([
       {
         path: "/login",
         element: <Login />,
+      },
+      {
+        path: "/forgot-password",
+        element: <ForgotPassword />,
+      },
+      {
+        path: "/reset-password/:token",
+        element: <ResetPassword />,
       },
       {
         path: "/register",
