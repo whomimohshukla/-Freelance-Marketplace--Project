@@ -8,6 +8,8 @@ interface User {
   role: string;
   firstName?: string;
   lastName?: string;
+  avatar?: string;
+  username?: string;
   // add other fields as required
 }
 
