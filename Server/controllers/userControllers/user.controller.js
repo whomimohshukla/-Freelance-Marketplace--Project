@@ -204,7 +204,7 @@ const signup = async (req, res) => {
 
 const login = async (req, res) => {
 	try {
-		const { email, password, totpToken } = req.body;
+		const { email, password, totpToken, emailOtp } = req.body;
 
 		if (!email || !password) {
 			return res.status(400).json({

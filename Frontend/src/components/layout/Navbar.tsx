@@ -30,7 +30,15 @@ const Navbar: React.FC = () => {
             transition={{ duration: 0.5 }}
             className="flex-shrink-0"
           >
-            <Link to="/" className="flex items-center group">
+            <Link to="/" className="flex items-center group gap-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="h-7 w-7 text-code-green group-hover:rotate-6 transition-transform"
+              >
+                <path d="M12 2 2 7l10 5 10-5-10-5Zm0 7L2 14l10 5 10-5-10-5Z" />
+              </svg>
               <span className="text-2xl font-bold bg-gradient-to-r from-code-green to-[#80FFF2] bg-clip-text text-transparent group-hover:scale-105 transition-transform">
                 SkillBridge
               </span>

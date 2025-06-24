@@ -14,6 +14,7 @@ const menuItems: MenuItem[] = [
   { label: 'Change Password', to: '/settings/change-password' },
   { label: 'Orders', to: '/orders' },
   { label: 'Earnings', to: '/earnings' },
+  { label: 'Delete Account', to: '/settings/delete-account' },
   { divider: true },
   { label: 'Logout', action: 'logout' },
 ];

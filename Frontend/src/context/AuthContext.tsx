@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { loginUser as apiLoginUser } from '../api/auth';
+import FullPageLoader from '../components/ui/FullPageLoader';
 import { logoutUser } from '../api/user';
 
 interface User {
@@ -25,6 +26,7 @@ interface AuthContextValue {
   loading: boolean;
   login: (creds: LoginCredentials, remember: boolean) => Promise<void>;
   logout: () => void;
+  setAuth: (user: User, token: string, remember: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -37,11 +39,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Load from localStorage on mount
   useEffect(() => {
     const storedToken = localStorage.getItem('token') || sessionStorage.getItem('token');
-    const storedUser = localStorage.getItem('user') || sessionStorage.getItem('user');
+    const storedUserRaw = localStorage.getItem('user') || sessionStorage.getItem('user');
 
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
+    if (storedToken && storedUserRaw && storedUserRaw !== 'undefined') {
+      try {
+        const parsed = JSON.parse(storedUserRaw);
+        setToken(storedToken);
+        setUser(parsed);
+      } catch {
+        // malformed, clear
+        localStorage.removeItem('user');
+        sessionStorage.removeItem('user');
+      }
     }
     setLoading(false);
   }, []);
@@ -74,14 +83,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
   };
 
+  const setAuth = (usr: User, tkn: string, remember: boolean) => {
+    const storage = remember ? localStorage : sessionStorage;
+    storage.setItem('token', tkn);
+    storage.setItem('user', JSON.stringify(usr));
+    setToken(tkn);
+    setUser(usr);
+  };
+
   const value: AuthContextValue = {
     user,
     token,
     loading,
     login,
     logout,
+    setAuth,
   };
 
+  if (loading) {
+    return <AuthContext.Provider value={value}><FullPageLoader /></AuthContext.Provider>;
+  }
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
