@@ -1,4 +1,10 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
+import ProtectedRoute from "./router/ProtectedRoute";
+import SettingsLayout from "./pages/Settings/SettingsLayout";
+import NotificationsSettings from "./pages/Settings/NotificationsSettings";
+import BillingSettings from "./pages/Settings/BillingSettings";
+import TwoFactorSettings from "./pages/Settings/TwoFactorSettings";
+import SocialAccountsSettings from "./pages/Settings/SocialAccountsSettings";
 import App from "./App";
 import SearchProjects from "./components/features/SearchProjects";
 import SecurePayments from "./components/features/SecurePayments";
@@ -141,34 +147,30 @@ export const router = createBrowserRouter([
         element: <ProfileView />,
       },
       {
-        path: "/settings/profile",
-        element: <ProfileSettings />,
-      },
-      {
-        path: "/settings/change-password",
-        element: <ChangePassword />,
-      },
-      {
-        path: "/settings/delete-account",
-        element: <DeleteAccount />,
-
-          },
-          {
-
-
-      },
-      {
-        path: "/orders",
-        element: <Orders />,
-      },
-      {
-        path: "/earnings",
-        element: <Earnings />,
-      },
-      {
         path: "/help-center",
         element: <HelpCenterPage />,
-      }
+      },
+      {
+        element: <ProtectedRoute />,
+        children: [
+          {
+          path: "settings",
+          element: <SettingsLayout />,
+          children: [
+            { index: true, element: <Navigate to="/settings/profile" replace /> },
+            { path: "profile", element: <ProfileSettings /> },
+            { path: "change-password", element: <ChangePassword /> },
+            { path: "2fa", element: <TwoFactorSettings /> },
+            { path: "social", element: <SocialAccountsSettings /> },
+            { path: "notifications", element: <NotificationsSettings /> },
+            { path: "billing", element: <BillingSettings /> },
+            { path: "delete-account", element: <DeleteAccount /> },
+          ],
+        },
+          { path: "orders", element: <Orders /> },
+          { path: "earnings", element: <Earnings /> },
+        ],
+      },
     ],
   },
 ]);
