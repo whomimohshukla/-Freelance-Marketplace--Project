@@ -2,6 +2,7 @@ const User = require("../../models/user.model");
 // const OTP = require("../models/otp.model");
 const FreelancerProfile = require("../../models/freelancer.model");
 const ClientProfile = require("../../models/client.model");
+const Email2FACode = require("../../models/email2fa.model");
 const { OAuth2Client } = require("google-auth-library");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
@@ -243,29 +244,68 @@ const login = async (req, res) => {
 
 		// Handle 2FA
 		if (user.twoFactorEnabled) {
-			// If no TOTP token provided, return early with 2FA requirement
-			if (!totpToken) {
-				return res.json({
-					success: true,
-					requiresTwoFactor: true,
+			if (user.twoFactorType === "totp") {
+				// TOTP flow
+				if (!totpToken) {
+					return res.json({
+						success: true,
+						requiresTwoFactor: true,
+						method: "totp",
+						suspiciousLogin: isSuspicious,
+					});
+				}
+				const isValidToken = speakeasy.totp.verify({
+					secret: user.twoFactorSecret,
+					encoding: "base32",
+					token: totpToken,
+				});
+				if (!isValidToken) {
+					return res.status(401).json({
+						success: false,
+						message: "Invalid 2FA token",
+					});
+				}
+			} else if (user.twoFactorType === "email") {
+				// Email OTP flow
+				if (!emailOtp) {
+					// send code and ask for it
+					const code = Math.floor(100000 + Math.random() * 900000).toString();
+					const codeHash = await bcrypt.hash(code, 10);
+					const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+					await Email2FACode.create({
+						userId: user._id,
+						codeHash,
+						purpose: "2fa_login",
+						expiresAt,
+					});
+					await emailService.sendOTPEmail(user.email, code);
+					return res.json({
+						success: true,
+						requiresTwoFactor: true,
+						method: "email",
+						message: "Verification code sent to email",
+					});
+				}
+
+				const record = await Email2FACode.findOne({
 					userId: user._id,
-					email: user.email,
-					suspiciousLogin: isSuspicious,
-				});
-			}
-
-			// Verify TOTP token if provided
-			const isValidToken = speakeasy.totp.verify({
-				secret: user.twoFactorSecret,
-				encoding: "base32",
-				token: totpToken,
-			});
-
-			if (!isValidToken) {
-				return res.status(401).json({
-					success: false,
-					message: "Invalid 2FA token",
-				});
+					purpose: "2fa_login",
+				}).sort({ createdAt: -1 });
+				if (!record || record.expiresAt < new Date()) {
+					return res.status(400).json({
+						success: false,
+						message: "Code expired or not found",
+					});
+				}
+				const valid = await bcrypt.compare(emailOtp, record.codeHash);
+				if (!valid) {
+					return res.status(401).json({
+						success: false,
+						message: "Invalid 2FA token",
+					});
+				}
+				// clean up used codes
+				await Email2FACode.deleteMany({ userId: user._id, purpose: "2fa_login" });
 			}
 		}
 		// If suspicious login detected and 2FA not enabled
@@ -560,7 +600,9 @@ const confirmSetup2FA = async (req, res) => {
 
 		const user = await User.findById(userId);
 		if (!user) {
-			return res.status(404).json({ success: false, message: "User not found" });
+			return res
+				.status(404)
+				.json({ success: false, message: "User not found" });
 		}
 
 		const verified = speakeasy.totp.verify({
@@ -570,7 +612,9 @@ const confirmSetup2FA = async (req, res) => {
 		});
 
 		if (!verified) {
-			return res.status(401).json({ success: false, message: "Invalid 2FA token" });
+			return res
+				.status(401)
+				.json({ success: false, message: "Invalid 2FA token" });
 		}
 
 		user.twoFactorEnabled = true;
@@ -579,60 +623,96 @@ const confirmSetup2FA = async (req, res) => {
 		return res.json({ success: true, message: "2FA enabled successfully" });
 	} catch (error) {
 		console.error("Confirm 2FA setup error:", error);
-		return res.status(500).json({ success: false, message: "Failed to enable 2FA", error: error.message });
+		return res
+			.status(500)
+			.json({
+				success: false,
+				message: "Failed to enable 2FA",
+				error: error.message,
+			});
 	}
 };
 
-// ================= EMAIL 2FA FLOW =================
-const Email2FACode = require("../../models/email2fa.model");
-
 // Send verification code to enable email-based 2FA
 const enableEmail2FA = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+	try {
+		const userId = req.user.id;
+		const user = await User.findById(userId);
+		if (!user)
+			return res
+				.status(404)
+				.json({ success: false, message: "User not found" });
 
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const codeHash = await bcrypt.hash(code, 10);
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 min
+		const code = Math.floor(100000 + Math.random() * 900000).toString();
+		const codeHash = await bcrypt.hash(code, 10);
+		const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 min
 
-    await Email2FACode.create({ userId, codeHash, purpose: "2fa_enable", expiresAt });
-    await emailService.sendOTPEmail(user.email, code);
+		await Email2FACode.create({
+			userId,
+			codeHash,
+			purpose: "2fa_enable",
+			expiresAt,
+		});
+		await emailService.sendOTPEmail(user.email, code);
 
-    return res.json({ success: true, message: "Verification code sent to email" });
-  } catch (error) {
-    console.error("enableEmail2FA error:", error);
-    res.status(500).json({ success: false, message: "Failed to send code", error: error.message });
-  }
+		return res.json({
+			success: true,
+			message: "Verification code sent to email",
+		});
+	} catch (error) {
+		console.error("enableEmail2FA error:", error);
+		res.status(500).json({
+			success: false,
+			message: "Failed to send code",
+			error: error.message,
+		});
+	}
 };
 
 // Confirm the code and activate email 2FA
 const confirmEmail2FA = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const user = await User.findById(userId);
-    const { code } = req.body;
-    if (!code) return res.status(400).json({ success: false, message: "Code is required" });
+	try {
+		const userId = req.user.id;
+		const user = await User.findById(userId);
+		const { code } = req.body;
+		if (!code)
+			return res
+				.status(400)
+				.json({ success: false, message: "Code is required" });
 
-    const record = await Email2FACode.findOne({ userId, purpose: "2fa_enable" }).sort({ createdAt: -1 });
-    if (!record || record.expiresAt < new Date()) {
-      return res.status(400).json({ success: false, message: "Code expired or not found" });
-    }
+		const record = await Email2FACode.findOne({
+			userId,
+			purpose: "2fa_enable",
+		}).sort({ createdAt: -1 });
+		if (!record || record.expiresAt < new Date()) {
+			return res
+				.status(400)
+				.json({ success: false, message: "Code expired or not found" });
+		}
 
-    const valid = await bcrypt.compare(code, record.codeHash);
-    if (!valid) return res.status(401).json({ success: false, message: "Invalid code" });
+		const valid = await bcrypt.compare(code, record.codeHash);
+		if (!valid)
+			return res
+				.status(401)
+				.json({ success: false, message: "Invalid code" });
 
-    user.twoFactorEnabled = true;
-    user.twoFactorType = "email";
-    await user.save();
-    await Email2FACode.deleteMany({ userId, purpose: "2fa_enable" });
+		user.twoFactorEnabled = true;
+		user.twoFactorType = "email";
+		await user.save();
+		await Email2FACode.deleteMany({ userId, purpose: "2fa_enable" });
 
-    return res.json({ success: true, message: "Email 2FA enabled successfully" });
-  } catch (error) {
-    console.error("confirmEmail2FA error:", error);
-    res.status(500).json({ success: false, message: "Failed to confirm code", error: error.message });
-  }
+		return res.json({
+			success: true,
+			message: "Email 2FA enabled successfully",
+		});
+	} catch (error) {
+		console.error("confirmEmail2FA error:", error);
+		res.status(500).json({
+			success: false,
+			message: "Failed to confirm code",
+			error: error.message,
+		});
+	}
 };
 
 const forgotPassword = async (req, res) => {
@@ -872,24 +952,28 @@ const deleteAccount = async (req, res) => {
 const changePassword = async (req, res) => {
 	try {
 		const { id: userId } = req.user;
-        const { currentPassword, newPassword } = req.body;
+		const { currentPassword, newPassword } = req.body;
 
-        // Ensure we have the hashed password field
-        const user = await User.findById(userId).select('+password');
-        if (!user)
-          return res.status(404).json({ success: false, message: 'User not found' });
+		// Ensure we have the hashed password field
+		const user = await User.findById(userId).select("+password");
+		if (!user)
+			return res
+				.status(404)
+				.json({ success: false, message: "User not found" });
 
-        // Verify current password
-        const isMatch = await bcrypt.compare(currentPassword, user.password);
-        if (!isMatch)
-          return res.status(401).json({ success: false, message: 'Current password is incorrect' });
+		// Verify current password
+		const isMatch = await bcrypt.compare(currentPassword, user.password);
+		if (!isMatch)
+			return res
+				.status(401)
+				.json({ success: false, message: "Current password is incorrect" });
 
-        // OPTIONAL: implement your own password-strength check here
-        // if(!validatePassword(newPassword)) { ... }
+		// OPTIONAL: implement your own password-strength check here
+		// if(!validatePassword(newPassword)) { ... }
 
-        // Hash the new password and save
-        user.password = newPassword; // hashing handled by User schema pre-save hook
-        await user.save();
+		// Hash the new password and save
+		user.password = newPassword; // hashing handled by User schema pre-save hook
+		await user.save();
 
 		res.json({
 			success: true,

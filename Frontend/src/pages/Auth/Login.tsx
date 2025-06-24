@@ -13,7 +13,9 @@ const Login = () => {
   const [rememberMe, setRememberMe] = useState(false)
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState<'password' | '2fa'>('password')
+  const [twoFactorMethod, setTwoFactorMethod] = useState<'totp' | 'email' | null>(null);
   const [totpToken, setTotpToken] = useState('')
+  const [emailOtp, setEmailOtp] = useState('')
   const [suspiciousLogin, setSuspiciousLogin] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate();
@@ -27,18 +29,22 @@ const Login = () => {
       if(step === 'password'){
         response = await loginUser({ email, password });
       } else {
-        response = await loginUser({ email, password, totpToken });
+        const payload: any = { email, password };
+        if(twoFactorMethod === 'totp') payload.totpToken = totpToken;
+        else if(twoFactorMethod === 'email') payload.emailOtp = emailOtp;
+        response = await loginUser(payload);
       }
       const { data } = response;
       if (data.requiresTwoFactor) {
         setStep('2fa');
+        setTwoFactorMethod((data.method as 'totp' | 'email') || 'totp');
         setSuspiciousLogin(!!data.suspiciousLogin);
         setError('');
         return; // wait for second step
       }
       if (data.success) {
         // now fully authenticated
-        await ctxLogin({ email, password, totpToken: step==='2fa'?totpToken: undefined }, rememberMe);
+        await ctxLogin({ email, password }, rememberMe);
         navigate('/settings/profile');
       } else {
         setError(data.message || 'Login failed');
@@ -120,6 +126,7 @@ const Login = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
+              {step === 'password' && (<>
               <div className="space-y-4">
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
@@ -177,6 +184,39 @@ const Login = () => {
                   Forgot password?
                 </Link>
               </div>
+              </>)}
+
+            {step === '2fa' && (
+              <div className="space-y-4">
+                {twoFactorMethod === 'totp' ? (
+                  <>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Authenticator Code</label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={6}
+                      value={totpToken}
+                      onChange={(e) => setTotpToken(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-code-green"
+                      placeholder="123456"
+                    />
+                  </>
+                ) : (
+                  <>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Email OTP</label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={6}
+                      value={emailOtp}
+                      onChange={(e) => setEmailOtp(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-code-green"
+                      placeholder="123456"
+                    />
+                  </>
+                )}
+              </div>
+            )}
 
               <button
                 type="submit"

@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import Spinner from '../../components/ui/Spinner';
-import { setup2FA, confirm2FASetup, disable2FA, fetchMyProfile } from '../../api/user';
+import { setup2FA, confirm2FASetup, disable2FA, fetchMyProfile, sendEmail2FACode, confirmEmail2FA } from '../../api/user';
 
 const TwoFactorSettings = () => {
   const [enabled, setEnabled] = useState<boolean | null>(null);
   const [qr, setQr] = useState<string | null>(null);
   const [disableCode, setDisableCode] = useState('');
   const [code, setCode] = useState('');
+  const [emailStep, setEmailStep] = useState(false);
+  const [emailCode, setEmailCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [msg, setMsg] = useState('');
@@ -32,6 +34,7 @@ const TwoFactorSettings = () => {
     setErr('');
   };
 
+  // Enable via authenticator
   const handleEnable = async () => {
     clearMessages();
     setLoading(true);
@@ -40,6 +43,23 @@ const TwoFactorSettings = () => {
       const { data } = await setup2FA();
       if (data.success) {
         setQr(data.data.qrCode);
+      }
+    } catch (e: any) {
+      setErr(e.response?.data?.message || 'Failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Enable via email
+  const handleEnableEmail = async () => {
+    clearMessages();
+    setLoading(true);
+    try {
+      const { data } = await sendEmail2FACode();
+      if (data.success) {
+        setEmailStep(true);
+        setMsg('Verification code sent to your email');
       }
     } catch (e: any) {
       setErr(e.response?.data?.message || 'Failed');
@@ -58,6 +78,24 @@ const TwoFactorSettings = () => {
         setEnabled(true);
         setQr(null);
         setMsg('2FA Enabled');
+      }
+    } catch (e: any) {
+      setErr(e.response?.data?.message || 'Failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyEmail = async () => {
+    if (emailCode.length < 6) return setErr('Enter 6-digit code');
+    clearMessages();
+    setLoading(true);
+    try {
+      const { data } = await confirmEmail2FA(emailCode);
+      if (data.success) {
+        setEnabled(true);
+        setEmailStep(false);
+        setMsg('Email 2FA Enabled');
       }
     } catch (e: any) {
       setErr(e.response?.data?.message || 'Failed');
@@ -94,10 +132,29 @@ const TwoFactorSettings = () => {
         </div>
       )}
 
-      {enabled !== true && !qr && !fetching && (
-        <button onClick={handleEnable} disabled={loading} className="px-6 py-3 bg-code-green text-black font-semibold rounded-lg">
-          {loading ? 'Loading…' : 'Enable 2FA'}
-        </button>
+      {enabled !== true && !qr && !emailStep && !fetching && (
+        <div className="flex flex-col sm:flex-row gap-4">
+            <button onClick={handleEnable} disabled={loading} className="flex-1 px-6 py-3 bg-code-green text-black font-semibold rounded-lg">
+              {loading ? 'Loading…' : 'Enable with Authenticator App'}
+            </button>
+            <button onClick={handleEnableEmail} disabled={loading} className="flex-1 px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg">
+              {loading ? 'Loading…' : 'Enable with Email OTP'}
+            </button>
+          </div>
+      )}
+
+      {emailStep && (
+        <div className="space-y-4 max-w-xs">
+          <input
+            placeholder="Enter 6-digit code from email"
+            value={emailCode}
+            onChange={(e) => setEmailCode(e.target.value)}
+            className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 text-white"
+          />
+          <button onClick={handleVerifyEmail} disabled={loading} className="px-6 py-3 bg-code-green text-black font-semibold rounded-lg">
+            {loading ? 'Verifying…' : 'Verify & Activate'}
+          </button>
+        </div>
       )}
 
       {qr && (

@@ -17,5 +17,9 @@ export const verify2FA = (token: string, tempToken: string | null = null) => htt
 export const disable2FA = (token: string) => http.post('/v1/users/disable-2fa', { token });
 export const confirm2FASetup = (token: string) => http.post('/v1/users/confirm-2fa-setup', { token });
 
+// Email-OTP 2FA
+export const sendEmail2FACode = () => http.post('/v1/users/email-2fa/send');
+export const confirmEmail2FA = (code: string) => http.post('/v1/users/email-2fa/confirm', { code });
+
 // Auth utility
 export const logoutUser = () => http.post('/v1/users/logout');

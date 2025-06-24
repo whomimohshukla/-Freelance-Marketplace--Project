@@ -29,6 +29,6 @@ export const forgotPassword = (email: string) => http.post('/v1/users/forgot-pas
 export const resetPassword = (token: string, newPassword: string) => http.post('/v1/users/reset-password', { token, newPassword });
 
 // Login user
-export const loginUser = (data: { email: string; password: string; totpToken?: string }) => http.post('/v1/users/login', data);
+export const loginUser = (data: { email: string; password: string; totpToken?: string; emailOtp?: string }) => http.post('/v1/users/login', data);
 
 
