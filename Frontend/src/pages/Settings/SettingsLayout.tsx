@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 const menu = [
   { label: 'Profile', to: '/settings/profile' },
   { label: 'Security', to: '/settings/change-password' },
+  { label: 'Two-Factor Auth', to: '/settings/2fa' },
+  { label: 'Social Accounts', to: '/settings/social' },
   { label: 'Notifications', to: '/settings/notifications' },
   { label: 'Billing', to: '/settings/billing' },
   { label: 'Delete Account', to: '/settings/delete-account', danger: true },
