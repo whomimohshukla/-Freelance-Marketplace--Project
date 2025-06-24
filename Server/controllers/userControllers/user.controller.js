@@ -583,6 +583,58 @@ const confirmSetup2FA = async (req, res) => {
 	}
 };
 
+// ================= EMAIL 2FA FLOW =================
+const Email2FACode = require("../../models/email2fa.model");
+
+// Send verification code to enable email-based 2FA
+const enableEmail2FA = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const codeHash = await bcrypt.hash(code, 10);
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 min
+
+    await Email2FACode.create({ userId, codeHash, purpose: "2fa_enable", expiresAt });
+    await emailService.sendOTPEmail(user.email, code);
+
+    return res.json({ success: true, message: "Verification code sent to email" });
+  } catch (error) {
+    console.error("enableEmail2FA error:", error);
+    res.status(500).json({ success: false, message: "Failed to send code", error: error.message });
+  }
+};
+
+// Confirm the code and activate email 2FA
+const confirmEmail2FA = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const user = await User.findById(userId);
+    const { code } = req.body;
+    if (!code) return res.status(400).json({ success: false, message: "Code is required" });
+
+    const record = await Email2FACode.findOne({ userId, purpose: "2fa_enable" }).sort({ createdAt: -1 });
+    if (!record || record.expiresAt < new Date()) {
+      return res.status(400).json({ success: false, message: "Code expired or not found" });
+    }
+
+    const valid = await bcrypt.compare(code, record.codeHash);
+    if (!valid) return res.status(401).json({ success: false, message: "Invalid code" });
+
+    user.twoFactorEnabled = true;
+    user.twoFactorType = "email";
+    await user.save();
+    await Email2FACode.deleteMany({ userId, purpose: "2fa_enable" });
+
+    return res.json({ success: true, message: "Email 2FA enabled successfully" });
+  } catch (error) {
+    console.error("confirmEmail2FA error:", error);
+    res.status(500).json({ success: false, message: "Failed to confirm code", error: error.message });
+  }
+};
+
 const forgotPassword = async (req, res) => {
 	try {
 		const { email } = req.body;
@@ -1120,5 +1172,7 @@ module.exports = {
 	getProfile,
 	disable2FA,
 	confirmSetup2FA,
+	enableEmail2FA,
+	confirmEmail2FA,
 	logout,
 };

@@ -99,6 +99,11 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false
     },
+    twoFactorType: {
+      type: String,
+      enum: ['totp', 'email'],
+      default: 'totp',
+    },
     tempVerificationCode: {
       type: String,
       default: null

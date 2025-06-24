@@ -16,6 +16,7 @@ interface User {
 interface LoginCredentials {
   email: string;
   password: string;
+  totpToken?: string;
 }
 
 interface AuthContextValue {

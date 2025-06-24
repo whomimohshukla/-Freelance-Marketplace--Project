@@ -12,6 +12,9 @@ const Login = () => {
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [step, setStep] = useState<'password' | '2fa'>('password')
+  const [totpToken, setTotpToken] = useState('')
+  const [suspiciousLogin, setSuspiciousLogin] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate();
 
@@ -20,10 +23,22 @@ const Login = () => {
     setLoading(true);
     setError('');
     try {
-      const { data } = await loginUser({ email, password });
+      let response;
+      if(step === 'password'){
+        response = await loginUser({ email, password });
+      } else {
+        response = await loginUser({ email, password, totpToken });
+      }
+      const { data } = response;
+      if (data.requiresTwoFactor) {
+        setStep('2fa');
+        setSuspiciousLogin(!!data.suspiciousLogin);
+        setError('');
+        return; // wait for second step
+      }
       if (data.success) {
-        // update auth context
-        await ctxLogin({ email, password }, rememberMe);
+        // now fully authenticated
+        await ctxLogin({ email, password, totpToken: step==='2fa'?totpToken: undefined }, rememberMe);
         navigate('/settings/profile');
       } else {
         setError(data.message || 'Login failed');

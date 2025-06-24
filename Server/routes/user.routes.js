@@ -39,6 +39,10 @@ userRoutes.post("/verify-2fa", authMiddleware, useControllers.verify2FA);
 userRoutes.post("/disable-2fa", authMiddleware, useControllers.disable2FA);
 userRoutes.post("/confirm-2fa-setup", authMiddleware, useControllers.confirmSetup2FA);
 
+// Email-based 2FA enable and confirm
+userRoutes.post("/email-2fa/send", authMiddleware, useControllers.enableEmail2FA);
+userRoutes.post("/email-2fa/confirm", authMiddleware, useControllers.confirmEmail2FA);
+
 // Password reset
 userRoutes.post("/forgot-password", useControllers.forgotPassword);
 userRoutes.post("/reset-password", useControllers.resetPassword);

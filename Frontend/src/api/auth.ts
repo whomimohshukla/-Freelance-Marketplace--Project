@@ -1,9 +1,6 @@
 import http from './http';
 
-// Reuse the shared axios instance configured in http.ts – no need to import axios directly
-// If you ever need a fully-custom instance for a specific call you can create it here.
-// import axios from 'axios';
-// Register a new user
+
 export const registerUser = (data: {
   firstName: string;
   lastName: string;
@@ -32,6 +29,6 @@ export const forgotPassword = (email: string) => http.post('/v1/users/forgot-pas
 export const resetPassword = (token: string, newPassword: string) => http.post('/v1/users/reset-password', { token, newPassword });
 
 // Login user
-export const loginUser = (data: { email: string; password: string }) => http.post('/v1/users/login', data);
+export const loginUser = (data: { email: string; password: string; totpToken?: string }) => http.post('/v1/users/login', data);
 
-// Add more auth-related API calls as needed
+
