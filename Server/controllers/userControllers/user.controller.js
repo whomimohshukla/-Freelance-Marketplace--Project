@@ -553,6 +553,36 @@ const disable2FA = async (req, res) => {
 	}
 };
 
+const confirmSetup2FA = async (req, res) => {
+	try {
+		const userId = req.user.id;
+		const { token } = req.body;
+
+		const user = await User.findById(userId);
+		if (!user) {
+			return res.status(404).json({ success: false, message: "User not found" });
+		}
+
+		const verified = speakeasy.totp.verify({
+			secret: user.twoFactorSecret,
+			encoding: "base32",
+			token,
+		});
+
+		if (!verified) {
+			return res.status(401).json({ success: false, message: "Invalid 2FA token" });
+		}
+
+		user.twoFactorEnabled = true;
+		await user.save();
+
+		return res.json({ success: true, message: "2FA enabled successfully" });
+	} catch (error) {
+		console.error("Confirm 2FA setup error:", error);
+		return res.status(500).json({ success: false, message: "Failed to enable 2FA", error: error.message });
+	}
+};
+
 const forgotPassword = async (req, res) => {
 	try {
 		const { email } = req.body;
@@ -1089,5 +1119,6 @@ module.exports = {
 	changePassword,
 	getProfile,
 	disable2FA,
+	confirmSetup2FA,
 	logout,
 };

@@ -37,6 +37,7 @@ userRoutes.put(
 userRoutes.post("/setup-2fa", authMiddleware, useControllers.setup2FA);
 userRoutes.post("/verify-2fa", authMiddleware, useControllers.verify2FA);
 userRoutes.post("/disable-2fa", authMiddleware, useControllers.disable2FA);
+userRoutes.post("/confirm-2fa-setup", authMiddleware, useControllers.confirmSetup2FA);
 
 // Password reset
 userRoutes.post("/forgot-password", useControllers.forgotPassword);
