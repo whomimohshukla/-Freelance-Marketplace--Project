@@ -1,8 +1,30 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useRole } from '../../hooks/useRole';
 
-const menu = [
+const freelancerMenu = [
   { label: 'Profile', to: '/settings/profile' },
+  { label: 'Portfolio', to: '/settings/portfolio' },
+  { label: 'Skills', to: '/settings/skills' },
+  { label: 'Work Experience', to: '/settings/work-experience' },
+  { label: 'Education', to: '/settings/education' },
+  { label: 'Certifications', to: '/settings/certifications' },
+  { label: 'Availability', to: '/settings/availability' },
+  { label: 'Security', to: '/settings/change-password' },
+  { label: 'Two-Factor Auth', to: '/settings/2fa' },
+  { label: 'Social Accounts', to: '/settings/social' },
+  { label: 'Notifications', to: '/settings/notifications' },
+  { label: 'Billing', to: '/settings/billing' },
+  { label: 'Delete Account', to: '/settings/delete-account', danger: true },
+];
+
+const clientMenu = [
+  { label: 'Profile', to: '/settings/profile' },
+  { label: 'Company', to: '/settings/company' },
+  { label: 'Business Details', to: '/settings/business-details' },
+  { label: 'Team', to: '/settings/team' },
+  { label: 'Financials', to: '/settings/financials' },
+  { label: 'Preferences', to: '/settings/preferences' },
   { label: 'Security', to: '/settings/change-password' },
   { label: 'Two-Factor Auth', to: '/settings/2fa' },
   { label: 'Social Accounts', to: '/settings/social' },
@@ -12,6 +34,8 @@ const menu = [
 ];
 
 const SettingsLayout = () => {
+  const role = useRole();
+  const menu = role === 'client' ? clientMenu : freelancerMenu;
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
