@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import ProtectedRoute from "./router/ProtectedRoute";
+import RoleRoute from "./router/RoleRoute";
 import SettingsLayout from "./pages/Settings/SettingsLayout";
 import NotificationsSettings from "./pages/Settings/NotificationsSettings";
 import BillingSettings from "./pages/Settings/BillingSettings";
@@ -31,6 +32,7 @@ import TermsOfService from "./pages/TermsOfService";
 import CookiePolicy from "./pages/CookiePolicy";
 import ProfileView from "./pages/ProfileView";
 import ProfileSettings from "./pages/ProfileSettings";
+import PortfolioSettings from "./pages/Settings/PortfolioSettings";
 import ChangePassword from "./pages/Settings/ChangePassword";
 import DeleteAccount from "./pages/Settings/DeleteAccount";
 import Orders from "./pages/Orders";
@@ -159,6 +161,12 @@ export const router = createBrowserRouter([
           children: [
             { index: true, element: <Navigate to="/settings/profile" replace /> },
             { path: "profile", element: <ProfileSettings /> },
+            { path: "portfolio", element: <PortfolioSettings /> },
+            { path: "skills", element: <ProfileSettings /> /* TODO SkillsSettings */ },
+            { path: "work-experience", element: <ProfileSettings /> /* TODO WorkExperienceSettings */ },
+            { path: "education", element: <ProfileSettings /> /* TODO EducationSettings */ },
+            { path: "certifications", element: <ProfileSettings /> /* TODO CertificationsSettings */ },
+            { path: "availability", element: <ProfileSettings /> /* TODO AvailabilitySettings */ },
             { path: "change-password", element: <ChangePassword /> },
             { path: "2fa", element: <TwoFactorSettings /> },
             { path: "social", element: <SocialAccountsSettings /> },
@@ -167,8 +175,13 @@ export const router = createBrowserRouter([
             { path: "delete-account", element: <DeleteAccount /> },
           ],
         },
-          { path: "orders", element: <Orders /> },
-          { path: "earnings", element: <Earnings /> },
+          {
+            element: <RoleRoute allowed={['freelancer']} />,
+            children: [
+              { path: "orders", element: <Orders /> },
+              { path: "earnings", element: <Earnings /> },
+            ],
+          },
         ],
       },
     ],
