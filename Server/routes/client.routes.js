@@ -15,12 +15,15 @@ router.get('/top', clientController.getTopClients);
 
 router.post('/profile', auth,isClient, clientController.createOrUpdateProfile);
 
-router.get('/profile/:userId',auth ,clientController.getProfile);
+// Get current authenticated client profile
+router.get('/profile', auth, clientController.getProfile);
 
-// router.put('/company', auth, clientController.updateCompany);
+router.get('/profile/:userId', auth, clientController.getProfile);
+
+router.put('/company', auth, clientController.updateCompany);
 
 
-// router.put('/business-details', auth, clientController.updateBusinessDetails);
+router.put('/business-details', auth, clientController.updateBusinessDetails);
 
 
 // router.put('/hiring', auth, clientController.updateHiring);

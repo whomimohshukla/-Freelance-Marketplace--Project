@@ -132,7 +132,11 @@ exports.createOrUpdateProfile = async (req, res) => {
 // Get Client Profile
 exports.getProfile = async (req, res) => {
     try {
-        const { userId } = req.params;
+        // If no userId param provided, default to authenticated user's ID
+        let { userId } = req.params;
+        if (!userId && req.user) {
+            userId = req.user.id;
+        }
 
         if (!isValidObjectId(userId)) {
             return res.status(400).json({
@@ -150,10 +154,7 @@ exports.getProfile = async (req, res) => {
             .populate('team.user', 'firstName lastName email avatar');
 
         if (!profile) {
-            return res.status(404).json({
-                success: false,
-                error: 'Client profile not found'
-            });
+            return res.status(200).json({ success: true, data: null });
         }
 
         res.status(200).json({
@@ -188,10 +189,8 @@ exports.updateCompany = async (req, res) => {
         );
 
         if (!profile) {
-            return res.status(404).json({
-                success: false,
-                error: 'Client profile not found'
-            });
+            // create a new profile
+            profile = await ClientProfile.create({ user: new mongoose.Types.ObjectId(userId), company });
         }
 
         res.status(200).json({
@@ -226,10 +225,7 @@ exports.updateBusinessDetails = async (req, res) => {
         );
 
         if (!profile) {
-            return res.status(404).json({
-                success: false,
-                error: 'Client profile not found'
-            });
+            profile = await ClientProfile.create({ user: new mongoose.Types.ObjectId(userId), businessDetails });
         }
 
         res.status(200).json({

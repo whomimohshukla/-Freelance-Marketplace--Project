@@ -31,8 +31,11 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import CookiePolicy from "./pages/CookiePolicy";
 import ProfileView from "./pages/ProfileView";
-import ProfileSettings from "./pages/ProfileSettings";
+import ProfileSettings from './pages/Settings/ProfileSettings';
 import PortfolioSettings from "./pages/Settings/PortfolioSettings";
+import SkillsSettings from "./pages/Settings/SkillsSettings";
+import CompanySettings from "./pages/Settings/CompanySettings";
+import BusinessDetailsSettings from "./pages/Settings/BusinessDetailsSettings";
 import ChangePassword from "./pages/Settings/ChangePassword";
 import DeleteAccount from "./pages/Settings/DeleteAccount";
 import Orders from "./pages/Orders";
@@ -162,11 +165,13 @@ export const router = createBrowserRouter([
             { index: true, element: <Navigate to="/settings/profile" replace /> },
             { path: "profile", element: <ProfileSettings /> },
             { path: "portfolio", element: <PortfolioSettings /> },
-            { path: "skills", element: <ProfileSettings /> /* TODO SkillsSettings */ },
-            { path: "work-experience", element: <ProfileSettings /> /* TODO WorkExperienceSettings */ },
-            { path: "education", element: <ProfileSettings /> /* TODO EducationSettings */ },
-            { path: "certifications", element: <ProfileSettings /> /* TODO CertificationsSettings */ },
-            { path: "availability", element: <ProfileSettings /> /* TODO AvailabilitySettings */ },
+            { path: "skills", element: <SkillsSettings /> },
+            { path: "work-experience", element: <ProfileSettings /> /* WorkExperienceSettings TODO*/ },
+            { path: "education", element: <ProfileSettings /> /* EducationSettings TODO */ },
+            { path: "certifications", element: <ProfileSettings /> /* CertificationsSettings TODO */ },
+            { path: "availability", element: <ProfileSettings /> /* AvailabilitySettings TODO */ },
+            { path: "company", element: <CompanySettings /> },
+            { path: "business-details", element: <BusinessDetailsSettings /> },
             { path: "change-password", element: <ChangePassword /> },
             { path: "2fa", element: <TwoFactorSettings /> },
             { path: "social", element: <SocialAccountsSettings /> },
