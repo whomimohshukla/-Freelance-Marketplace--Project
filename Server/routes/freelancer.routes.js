@@ -3,6 +3,8 @@ const router = express.Router();
 const auth = require('../middleware/auth.middleware');
 const freelancerController = require('../controllers/core-Project/freelancer/freelancerProfile.controller');
 
+
+// freelancers
 // @route   POST /api/freelancers/profile
 // @desc    Create or update freelancer profile
 // @access  Private
