@@ -23,6 +23,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.9.3",
     "morgan": "^1.10.0",
+    "node-cron": "^4.1.1",
     "nodemailer": "^6.9.16",
     "nodemon": "^3.1.9",
     "passport": "^0.7.0",
@@ -30,6 +31,7 @@
     "passport-linkedin-oauth2": "^2.0.0",
     "passport-twitter": "^1.0.4",
     "qrcode": "^1.5.4",
+    "razorpay": "^2.9.6",
     "speakeasy": "^2.0.0"
   }
 }
