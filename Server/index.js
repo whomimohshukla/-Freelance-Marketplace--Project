@@ -15,6 +15,7 @@ const paymentsRoutes = require("../Server/routes/payments.routes");
 const teamRoutes = require("../Server/routes/team.routes");
 const reviewRoutes = require("../Server/routes/reviewFreelancer.routes");
 const ratingRoutes = require("../Server/routes/projectRating.routes");
+const socialAuthRoutes = require("../Server/routes/socialAuth.routes");
 const cors = require("cors");
 
 app.use(express.json());
@@ -44,6 +45,7 @@ app.use("/api/industries", industryRoutes);
 app.use("/api/review", reviewRoutes);
 app.use("/api/payments", paymentsRoutes);
 app.use("/api/rating", ratingRoutes);
+app.use("/api/auth", socialAuthRoutes);
 
 app.use("/api/teams", teamRoutes);
 
