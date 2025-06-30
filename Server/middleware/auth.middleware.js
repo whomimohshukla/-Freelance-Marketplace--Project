@@ -27,7 +27,7 @@ const auth = async (req, res, next) => {
 		next();
 	} catch (error) {
 		console.error("JWT verify error ->", error.message); // add this
-        
+
 		return res.status(401).json({ success: false, message: "Invalid token" });
 	}
 };
@@ -80,7 +80,6 @@ exports.isClient = async (req, res, next) => {
 		}
 		next();
 	} catch (error) {
-        onsole.error('JWT verify error ->', error.message);
 		return res.status(401).json({
 			success: false,
 			message: "Invalid token",

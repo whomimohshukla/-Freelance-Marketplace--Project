@@ -5,7 +5,7 @@ const razorpaySvc = require('../../services/razorpayService');
 // Create Razorpay order for funding a project/milestone
 exports.createOrder = async (req, res, next) => {
   try {
-    console.log('BODY:', req.body);
+    // console.log('BODY:', req.body);
     const { projectId, milestoneId, amount } = req.body;
     if (!projectId || !amount) {
       return res.status(400).json({ error: 'projectId & amount are required' });
