@@ -11,6 +11,7 @@ const skillsRoutes = require("../Server/routes/skills.routes");
 const freelancersRoute = require("../Server/routes/freelancer.routes");
 const clientRoute = require("../Server/routes/client.routes");
 const industryRoutes = require("../Server/routes/industry.routes");
+const paymentsRoutes = require("../Server/routes/payments.routes");
 const teamRoutes = require("../Server/routes/team.routes");
 const reviewRoutes = require("../Server/routes/reviewFreelancer.routes");
 const ratingRoutes = require("../Server/routes/projectRating.routes");
@@ -41,6 +42,7 @@ app.use("/api/freelancers", freelancersRoute);
 app.use("/api/clients", clientRoute);
 app.use("/api/industries", industryRoutes);
 app.use("/api/review", reviewRoutes);
+app.use("/api/payments", paymentsRoutes);
 app.use("/api/rating", ratingRoutes);
 
 app.use("/api/teams", teamRoutes);
