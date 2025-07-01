@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { getProfile } from '@/api/freelancer';
 import { FiStar, FiArrowLeft, FiMessageSquare } from 'react-icons/fi';
 
 /**
@@ -9,19 +10,35 @@ import { FiStar, FiArrowLeft, FiMessageSquare } from 'react-icons/fi';
 const tabs = ['Overview', 'Portfolio', 'Reviews'];
 
 const ProfileView: React.FC = () => {
-  const { username } = useParams<{ username: string }>();
+    const { userId } = useParams<{ userId: string }>();
   const [activeTab, setActiveTab] = useState<string>('Overview');
+  const [profile, setProfile] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // TODO: Fetch real data from API using the username
-  const profile = {
-    name: 'John Doe',
-    title: 'Full-Stack Developer',
-    rating: 4.9,
-    reviews: 120,
-    avatar: `https://ui-avatars.com/api/?name=${username ?? 'JD'}&background=00F5C4&color=0A1828`,
-    description:
-      'Experienced developer specialising in React, Node and scalable cloud infrastructure. I help businesses turn ideas into successful products.',
-  };
+  // Derived data helpers
+  const fullName = profile ? `${profile.user.firstName} ${profile.user.lastName}` : '';
+  const avatar = profile ? (profile.user.avatar || `https://ui-avatars.com/api/?name=${profile.user.firstName}&background=00F5C4&color=0A1828`) : '';
+  const ratingValue = profile?.rating?.average || 0;
+  const reviewCount = profile?.rating?.count || 0;
+
+  useEffect(() => {
+    if (!userId) return;
+    (async () => {
+      try {
+        const res = await getProfile(userId);
+        setProfile(res.data.data);
+      } catch (err: any) {
+        setError(err.response?.data?.error || 'Error fetching profile');
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [userId]);
+
+  if (loading) return <div className="text-center text-white py-20">Loading...</div>;
+  if (error) return <div className="text-center text-red-500 py-20">{error}</div>;
+  if (!profile) return null;
 
   return (
     <section className="w-full bg-primary text-white pb-20 pt-4">
@@ -36,23 +53,23 @@ const ProfileView: React.FC = () => {
       <header className="relative bg-light-blue/50 border-b border-gray-700">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex flex-col md:flex-row items-center md:items-start">
           <img
-            src={profile.avatar}
-            alt={profile.name}
+            src={avatar}
+            alt={fullName}
             className="w-32 h-32 rounded-full border-4 border-accent shadow-glow object-cover"
           />
           <div className="mt-6 md:mt-0 md:ml-8 flex-1">
-            <h1 className="text-3xl font-semibold mb-1">{profile.name}</h1>
+            <h1 className="text-3xl font-semibold mb-1">{fullName}</h1>
             <p className="text-text-secondary mb-2">{profile.title}</p>
             {/* Rating */}
             <div className="flex items-center mb-4">
               {Array.from({ length: 5 }).map((_, idx) => (
                 <FiStar
                   key={idx}
-                  className={`w-5 h-5 ${idx < Math.round(profile.rating) ? 'text-accent' : 'text-gray-600'}`}
+                  className={`w-5 h-5 ${idx < Math.round(ratingValue) ? 'text-accent' : 'text-gray-600'}`}
                 />
               ))}
               <span className="ml-2 text-sm text-text-secondary">
-                {profile.rating} ({profile.reviews} reviews)
+                {ratingValue} ({reviewCount} reviews)
               </span>
             </div>
             <div className="flex flex-wrap gap-4">
@@ -86,9 +103,9 @@ const ProfileView: React.FC = () => {
         {/* Tab Content (placeholder) */}
         {activeTab === 'Overview' && (
           <div>
-            <h2 className="text-xl font-semibold mb-4">About {profile.name.split(' ')[0]}</h2>
+            <h2 className="text-xl font-semibold mb-4">About {fullName.split(' ')[0]}</h2>
             <p className="leading-relaxed text-text-secondary max-w-4xl">
-              {profile.description}
+              {profile.bio}
             </p>
           </div>
         )}
@@ -116,7 +133,7 @@ const ProfileView: React.FC = () => {
                   ))}
                 </div>
                 <p className="text-text-secondary text-sm">
-                  "Great work! Highly recommend working with {profile.name.split(' ')[0]}."
+                  "Great work! Highly recommend working with {fullName.split(' ')[0]}."
                 </p>
               </div>
             ))}
