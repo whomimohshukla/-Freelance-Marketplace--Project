@@ -7,6 +7,9 @@ const role = require('../middleware/role.middleware'); // assume you have role m
 // Create order (client funds milestone/project)
 router.post('/order', auth, role('client'), paymentsCtrl.createOrder);
 
+// Verify client-side signature
+router.post('/capture', paymentsCtrl.capturePayment);
+
 // Razorpay webhook (must be raw body, so mount without bodyParser here)
 router.post('/webhook', express.raw({ type: 'application/json' }), paymentsCtrl.webhook);
 

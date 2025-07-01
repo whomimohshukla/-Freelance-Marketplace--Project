@@ -1,6 +1,7 @@
 const Payment = require('../../models/payment.model');
 const Project = require('../../models/project.model');
 const razorpaySvc = require('../../services/razorpayService');
+const crypto = require('crypto');
 
 // Create Razorpay order for funding a project/milestone
 exports.createOrder = async (req, res, next) => {
@@ -39,6 +40,36 @@ exports.createOrder = async (req, res, next) => {
     });
 
     res.json({ success: true, data: { order, paymentId: payment._id, keyId: process.env.RAZORPAY_KEY_ID } });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Verify Razorpay payment signature from client and mark as pending confirmation
+exports.capturePayment = async (req, res, next) => {
+  try {
+    const { razorpayPaymentId, razorpayOrderId, razorpaySignature, paymentId } = req.body;
+    if (!razorpayPaymentId || !razorpayOrderId || !razorpaySignature || !paymentId) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const expectedSig = crypto
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .update(`${razorpayOrderId}|${razorpayPaymentId}`)
+      .digest('hex');
+
+    if (expectedSig !== razorpaySignature) {
+      return res.status(400).json({ error: 'Invalid payment signature' });
+    }
+
+    const payment = await Payment.findByIdAndUpdate(
+      paymentId,
+      { status: 'PendingConfirmation' },
+      { new: true }
+    );
+    if (!payment) return res.status(404).json({ error: 'Payment record not found' });
+
+    res.json({ success: true });
   } catch (err) {
     next(err);
   }
