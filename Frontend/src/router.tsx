@@ -40,6 +40,7 @@ import ChangePassword from "./pages/Settings/ChangePassword";
 import DeleteAccount from "./pages/Settings/DeleteAccount";
 import Orders from "./pages/Orders";
 import Earnings from "./pages/Earnings";
+import ProposalsPage from "./pages/Dashboard/Proposals";
 import HelpCenterPage from "./pages/HelpCenterPage";
 
 export const router = createBrowserRouter([
@@ -148,7 +149,7 @@ export const router = createBrowserRouter([
         element: <CookiePolicy />,
       },
       {
-        path: "/profile/:username",
+        path: "/profile/:userId",
         element: <ProfileView />,
       },
       {
@@ -185,6 +186,7 @@ export const router = createBrowserRouter([
             children: [
               { path: "orders", element: <Orders /> },
               { path: "earnings", element: <Earnings /> },
+              { path: "dashboard/proposals", element: <ProposalsPage /> },
             ],
           },
         ],

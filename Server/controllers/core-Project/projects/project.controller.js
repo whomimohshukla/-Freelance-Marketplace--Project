@@ -802,6 +802,42 @@ exports.updateProposalStatus = async (req, res) => {
 	}
 };
 
+/**
+ * GET MY PROPOSALS - Freelancer dashboard view
+ * Returns all proposals submitted by logged-in freelancer across projects
+ */
+exports.getMyProposals = async (req, res) => {
+	try {
+		const userId = req.user.id;
+
+		// Find projects that contain proposals from this freelancer
+		const projects = await Project.find({
+			"proposals.freelancer": userId,
+		}).select("title proposals");
+
+		const myProposals = [];
+		projects.forEach((proj) => {
+			proj.proposals
+				.filter((p) => p.freelancer.toString() === userId)
+				.forEach((p) => {
+					myProposals.push({
+						_id: p._id,
+						project: { _id: proj._id, title: proj.title },
+						coverLetter: p.coverLetter,
+						bidAmount: p.bidAmount,
+						durationDays: p.durationDays,
+						status: p.status,
+						createdAt: p.createdAt,
+					});
+				});
+		});
+
+		return res.status(200).json({ success: true, data: myProposals });
+	} catch (error) {
+		return res.status(500).json({ success: false, error: error.message });
+	}
+};
+
 // ==================== MILESTONE MANAGEMENT ====================
 
 /**
