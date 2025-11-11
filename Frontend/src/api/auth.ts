@@ -10,25 +10,25 @@ export const registerUser = (data: {
   skills: string[];
   hourlyRate?: number;
   otp: string;
-}) => http.post('v1/users/signup', data);
+}) => http.post('/users/signup', data);
 
-
-
-
+/**
+ * Send OTP to email
+ */
 // Send OTP to email
-export const sendOtp = (email: string) => http.post('/v1/users/send-otp', { email });
+export const sendOtp = (email: string) => http.post('/users/send-otp', { email });
 
-
+/**
+ * Resend OTP to email
+ */
 // Resend OTP to email
-export const resendOtp = (email: string) => http.post('/v1/users/resend-otp', { email });
+export const resendOtp = (email: string) => http.post('/users/resend-otp', { email });
 
 // Forgot password
-export const forgotPassword = (email: string) => http.post('/v1/users/forgot-password', { email });
+export const forgotPassword = (email: string) => http.post('/users/forgot-password', { email });
 
 // Reset password
-export const resetPassword = (token: string, newPassword: string) => http.post('/v1/users/reset-password', { token, newPassword });
+export const resetPassword = (token: string, newPassword: string) => http.post('/users/reset-password', { token, newPassword });
 
 // Login user
-export const loginUser = (data: { email: string; password: string; totpToken?: string; emailOtp?: string }) => http.post('/v1/users/login', data);
-
-
+export const loginUser = (data: { email: string; password: string; totpToken?: string; emailOtp?: string }) => http.post('/users/login', data);
