@@ -5,6 +5,8 @@ const PORT = process.env.PORT || 3000;
 const morganizer = require("morgan");
 const statusMonitor = require("express-status-monitor");
 const database = require("../Server/config/database");
+const http = require("http");
+const { initSocket } = require("../Server/socket/index");
 const userRoutes = require("../Server/routes/user.routes");
 const projectRoutes = require("../Server/routes/projectCRUD.routes");
 const skillsRoutes = require("../Server/routes/skills.routes");
@@ -16,9 +18,11 @@ const teamRoutes = require("../Server/routes/team.routes");
 const reviewRoutes = require("../Server/routes/reviewFreelancer.routes");
 const ratingRoutes = require("../Server/routes/projectRating.routes");
 const socialAuthRoutes = require("../Server/routes/socialAuth.routes");
+const uploadsRoutes = require("../Server/routes/uploads.routes");
+const messagesRoutes = require("../Server/routes/messages.routes");
 const cors = require("cors");
 
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 app.use(morganizer("dev"));
 app.use(statusMonitor());
@@ -46,6 +50,8 @@ app.use("/api/v1/review", reviewRoutes);
 app.use("/api/v1/payments", paymentsRoutes);
 app.use("/api/v1/rating", ratingRoutes);
 app.use("/api/v1/auth", socialAuthRoutes);
+app.use("/api/v1/uploads", uploadsRoutes);
+app.use("/api/v1/messages", messagesRoutes);
 
 app.use("/api/v1/teams", teamRoutes);
 
@@ -53,6 +59,9 @@ app.get("/", (req, res) => {
 	res.send("Welcome to freelancer project");
 });
 
-app.listen(PORT, () => {
-	console.log(`server is running on ${PORT}`);
+const server = http.createServer(app);
+initSocket(server);
+
+server.listen(PORT, () => {
+    console.log(`server is running on ${PORT}`);
 });

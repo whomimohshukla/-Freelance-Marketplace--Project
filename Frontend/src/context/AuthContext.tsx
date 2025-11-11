@@ -1,7 +1,10 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { connectSocket, disconnectSocket } from '../lib/socket';
 import { loginUser as apiLoginUser } from '../api/auth';
 import FullPageLoader from '../components/ui/FullPageLoader';
 import { logoutUser } from '../api/user';
+import freelancerApi from '../api/freelancerApi';
+import clientApi from '../api/clientApi';
 
 interface User {
   _id: string;
@@ -36,6 +39,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Check whether user has completed required profile; redirect if not
+  const checkProfileCompletion = async (usr: User) => {
+    try {
+      if (usr.role === 'freelancer') {
+        await freelancerApi.getMyProfile();
+      } else if (usr.role === 'client') {
+        await clientApi.getMyProfile();
+      }
+      // success: profile exists
+    } catch (err: any) {
+      const status = err?.response?.status;
+      if (status === 404) {
+        if (window.location.pathname !== '/create-profile') {
+          window.location.href = '/create-profile';
+        }
+      }
+    }
+  };
+
   // Load from localStorage on mount
   useEffect(() => {
     const storedToken = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -46,6 +68,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const parsed = JSON.parse(storedUserRaw);
         setToken(storedToken);
         setUser(parsed);
+        // connect socket on boot if we have a token
+        connectSocket(storedToken);
+        // check profile completion
+        checkProfileCompletion(parsed).catch(() => {});
       } catch {
         // malformed, clear
         localStorage.removeItem('user');
@@ -65,6 +91,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         storage.setItem('user', JSON.stringify(data.user));
         setToken(data.token);
         setUser(data.user);
+        connectSocket(data.token);
+        // check profile completion post-login
+        checkProfileCompletion(data.user).catch(() => {});
       } else {
         throw new Error(data.message || 'Login failed');
       }
@@ -81,6 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     sessionStorage.removeItem('user');
     setToken(null);
     setUser(null);
+    disconnectSocket();
   };
 
   const setAuth = (usr: User, tkn: string, remember: boolean) => {

@@ -10,6 +10,11 @@ const freelancerController = require('../controllers/core-Project/freelancer/fre
 // @access  Private
 router.post('/profile', auth, freelancerController.createOrUpdateProfile);
 
+// @route   GET /api/freelancers/profile
+// @desc    Get current authenticated freelancer profile
+// @access  Private
+router.get('/profile', auth, freelancerController.getMyProfile);
+
 // @route   GET /api/freelancers/profile/:userId
 // @desc    Get freelancer profile by user ID
 // @access  Public

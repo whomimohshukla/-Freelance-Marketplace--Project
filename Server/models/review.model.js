@@ -42,3 +42,6 @@ const reviewSchema = new mongoose.Schema(
 
 const Review = mongoose.model("Review", reviewSchema);
 module.exports = Review;
+
+// Prevent duplicate reviews between the same reviewer and reviewee on a project
+reviewSchema.index({ project: 1, reviewer: 1, reviewee: 1 }, { unique: true });
