@@ -247,11 +247,17 @@ const login = async (req, res) => {
 			if (user.twoFactorType === "totp") {
 				// TOTP flow
 				if (!totpToken) {
+					const tempToken2FA = jwt.sign(
+						{ userId: user._id, type: "2fa_pending" },
+						process.env.JWT_SECRET,
+						{ expiresIn: "10m" }
+					);
 					return res.json({
 						success: true,
 						requiresTwoFactor: true,
 						method: "totp",
 						suspiciousLogin: isSuspicious,
+						tempToken: tempToken2FA,
 					});
 				}
 				const isValidToken = speakeasy.totp.verify({
@@ -279,11 +285,17 @@ const login = async (req, res) => {
 						expiresAt,
 					});
 					await emailService.sendOTPEmail(user.email, code);
+					const tempToken2FA = jwt.sign(
+						{ userId: user._id, type: "2fa_pending" },
+						process.env.JWT_SECRET,
+						{ expiresIn: "10m" }
+					);
 					return res.json({
 						success: true,
 						requiresTwoFactor: true,
 						method: "email",
 						message: "Verification code sent to email",
+						tempToken: tempToken2FA,
 					});
 				}
 
@@ -342,6 +354,11 @@ const login = async (req, res) => {
 			process.env.JWT_SECRET,
 			{ expiresIn: "7d" }
 		);
+		const refreshToken = jwt.sign(
+			{ userId: user._id, type: "refresh" },
+			process.env.JWT_SECRET,
+			{ expiresIn: "30d" }
+		);
 		user.token = token;
 		user.password = undefined;
 		// Send login notification email
@@ -361,12 +378,19 @@ const login = async (req, res) => {
 		res.cookie("token", token, {
 			expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
 		})
+			.cookie("refreshToken", refreshToken, {
+				httpOnly: true,
+				sameSite: "lax",
+				secure: false,
+				expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+			})
 			.status(201)
 			.json({
 				success: true,
 				message: "User logged in successfully",
 
 				token,
+				refreshToken,
 				user: {
 					id: user._id,
 					email: user.email,
@@ -1240,6 +1264,26 @@ const logout = async (req, res) => {
 	}
 };
 
+const refreshToken = async (req, res) => {
+	try {
+		const token = req.cookies?.refreshToken || req.body?.refreshToken;
+		if (!token) return res.status(401).json({ success: false, message: 'No refresh token' });
+		let decoded;
+		try {
+			decoded = jwt.verify(token, process.env.JWT_SECRET);
+			if (decoded.type !== 'refresh') throw new Error('Invalid type');
+		} catch (e) {
+			return res.status(401).json({ success: false, message: 'Invalid refresh token' });
+		}
+		const user = await User.findById(decoded.userId);
+		if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+		const newAccess = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
+		return res.json({ success: true, token: newAccess });
+	} catch (err) {
+		return res.status(500).json({ success: false, message: 'Failed to refresh token' });
+	}
+};
+
 module.exports = {
 	signup,
 	resendOTP,
@@ -1259,4 +1303,5 @@ module.exports = {
 	enableEmail2FA,
 	confirmEmail2FA,
 	logout,
+	refreshToken,
 };

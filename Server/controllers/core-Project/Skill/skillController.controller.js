@@ -23,17 +23,21 @@ exports.createSkill = async (req, res) => {
 // Get all skills with filtering and sorting
 exports.getAllSkills = async (req, res) => {
 	try {
-		const { category, sortBy } = req.query;
+		const { category, sortBy, q, page = 1, limit = 10 } = req.query;
 		const filter = {};
 		const sortOptions = {};
 
 		if (category) filter.category = category;
+		if (q) filter.name = { $regex: q, $options: 'i' };
 		if (sortBy === "demand") sortOptions["statistics.demandTrend"] = -1;
-		if (sortBy === "freelancers")
-			sortOptions["statistics.totalFreelancers"] = -1;
+		if (sortBy === "freelancers") sortOptions["statistics.totalFreelancers"] = -1;
 
-		const skills = await Skill.find(filter).sort(sortOptions);
-		res.json(skills);
+		const skip = (parseInt(page) - 1) * parseInt(limit);
+		const [items, total] = await Promise.all([
+			Skill.find(filter).sort(sortOptions).skip(skip).limit(parseInt(limit)),
+			Skill.countDocuments(filter),
+		]);
+		res.json({ success: true, data: items, pagination: { page: parseInt(page), total, pages: Math.ceil(total / limit) } });
 	} catch (error) {
 		res.status(500).json({ error: error.message });
 	}
@@ -77,6 +81,19 @@ exports.deleteSkill = async (req, res) => {
 		const skill = await Skill.findByIdAndDelete(req.params.id);
 		if (!skill) return res.status(404).json({ error: "Skill not found" });
 		res.json({ message: "Skill deleted successfully" });
+	} catch (error) {
+		res.status(500).json({ error: error.message });
+	}
+};
+
+// Popular skills (for typeahead)
+exports.getPopularSkills = async (req, res) => {
+	try {
+		const { limit = 10 } = req.query;
+		const items = await Skill.find({})
+			.sort({ "statistics.totalFreelancers": -1 })
+			.limit(parseInt(limit));
+		res.json({ success: true, data: items });
 	} catch (error) {
 		res.status(500).json({ error: error.message });
 	}

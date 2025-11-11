@@ -36,6 +36,24 @@ exports.createOrUpdateProfile = async (req, res) => {
     }
 };
 
+// Get current user's freelancer profile
+exports.getMyProfile = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const profile = await FreelancerProfile.findOne({ user: userId })
+            .populate('skills.skill')
+            .populate('user', 'firstName lastName email avatar');
+
+        if (!profile) {
+            return res.status(404).json({ success: false, message: 'Freelancer profile not found' });
+        }
+
+        return res.status(200).json({ success: true, data: profile });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
 // Get Freelancer Profile
 exports.getProfile = async (req, res) => {
     try {
