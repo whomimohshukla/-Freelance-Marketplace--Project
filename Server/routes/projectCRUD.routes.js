@@ -9,6 +9,9 @@ const Router = express.Router();
 Router.post("/create", auth, Project.createProject);
 
 Router.get("/", auth, Project.getAllProjects);
+
+// List logged-in freelancer's proposals across projects
+Router.get("/proposals/me", auth, Project.getMyProposals);
 Router.get("/search", auth, Project.searchProjects);
 Router.get("/recommendations", auth, Project.getRecommendedProjects);
 
@@ -26,7 +29,7 @@ Router.put(
 	"/:projectId/proposals/:proposalId",
 	auth,
 	Project.updateProposalStatus
-);;
+);
 
 Router.post("/:projectId/milestones", auth, Project.createMilestone);
 

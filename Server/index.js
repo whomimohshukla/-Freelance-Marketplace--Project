@@ -37,17 +37,17 @@ app.use(
 
 // mount route to server
 app.use("/api/v1/users", userRoutes);
-app.use("/api/project", projectRoutes);
-app.use("/api/skills", skillsRoutes);
-app.use("/api/freelancers", freelancersRoute);
-app.use("/api/clients", clientRoute);
-app.use("/api/industries", industryRoutes);
-app.use("/api/review", reviewRoutes);
-app.use("/api/payments", paymentsRoutes);
-app.use("/api/rating", ratingRoutes);
-app.use("/api/auth", socialAuthRoutes);
+app.use("/api/v1/project", projectRoutes);
+app.use("/api/v1/skills", skillsRoutes);
+app.use("/api/v1/freelancers", freelancersRoute);
+app.use("/api/v1/clients", clientRoute);
+app.use("/api/v1/industries", industryRoutes);
+app.use("/api/v1/review", reviewRoutes);
+app.use("/api/v1/payments", paymentsRoutes);
+app.use("/api/v1/rating", ratingRoutes);
+app.use("/api/v1/auth", socialAuthRoutes);
 
-app.use("/api/teams", teamRoutes);
+app.use("/api/v1/teams", teamRoutes);
 
 app.get("/", (req, res) => {
 	res.send("Welcome to freelancer project");

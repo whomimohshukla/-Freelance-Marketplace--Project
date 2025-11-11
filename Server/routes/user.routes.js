@@ -14,11 +14,6 @@ userRoutes.post("/signup", useControllers.signup);
 userRoutes.post("/login", useControllers.login);
 userRoutes.post("/google-login", useControllers.googleLogin);
 
-// Social Authentication Routes
-userRoutes.post('/auth/github', socialAuthController.githubAuth);
-userRoutes.post('/auth/linkedin', socialAuthController.linkedinAuth);
-userRoutes.post('/auth/complete-registration', socialAuthController.completeSocialRegistration);
-
 // Profile routes
 userRoutes.get("/profile/:id?", authMiddleware, useControllers.getProfile);
 userRoutes.put("/profile", authMiddleware, useControllers.updateProfile);
