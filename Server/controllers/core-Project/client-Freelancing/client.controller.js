@@ -1,8 +1,56 @@
 const ClientProfile = require('../../../models/client.model');
+const User = require('../../../models/user.model');
 const mongoose = require('mongoose');
 
 // Helper function to validate ObjectId
 const isValidObjectId = (id) => mongoose.isValidObjectId(id);
+
+// Update Preferences
+exports.updatePreferences = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { preferences } = req.body;
+
+        if (!isValidObjectId(userId)) {
+            return res.status(400).json({ success: false, error: 'Invalid user ID format' });
+        }
+
+        const profile = await ClientProfile.findOneAndUpdate(
+            { user: new mongoose.Types.ObjectId(userId) },
+            { $set: { preferences }, $setOnInsert: { user: new mongoose.Types.ObjectId(userId) } },
+            { new: true, upsert: true, runValidators: true }
+        );
+
+        return res.status(200).json({ success: true, data: profile.preferences || {} });
+    } catch (error) {
+        return res.status(400).json({ success: false, error: error.message });
+    }
+};
+
+// Search users by email/name for team invite
+exports.searchTeamUsers = async (req, res) => {
+    try {
+        const { q = '' } = req.query;
+        if (!q || String(q).trim().length < 2) {
+            return res.json({ success: true, data: [] });
+        }
+        const regex = new RegExp(String(q).trim(), 'i');
+        const users = await User.find({
+            $or: [
+                { email: regex },
+                { firstName: regex },
+                { lastName: regex },
+            ],
+            isDeleted: { $ne: true },
+        })
+            .select('firstName lastName email avatar role')
+            .limit(10)
+            .lean();
+        return res.json({ success: true, data: users });
+    } catch (error) {
+        return res.status(500).json({ success: false, error: error.message });
+    }
+};
 
 // Search Clients
 exports.searchClients = async (req, res) => {
@@ -103,19 +151,11 @@ exports.createOrUpdateProfile = async (req, res) => {
             );
         }
 
-        let profile = await ClientProfile.findOne({ user: userId });
-
-        if (profile) {
-            profile = await ClientProfile.findOneAndUpdate(
-                { user: userId },
-                { $set: updateData },
-                { new: true, runValidators: true }
-            ).populate(['user', 'industry', 'hiring.preferredSkills', 'projects.active', 'projects.completed']);
-        } else {
-            updateData.user = new mongoose.Types.ObjectId(userId);
-            profile = await ClientProfile.create(updateData);
-            await profile.populate(['user', 'industry', 'hiring.preferredSkills']);
-        }
+        const profile = await ClientProfile.findOneAndUpdate(
+            { user: new mongoose.Types.ObjectId(userId) },
+            { $set: updateData, $setOnInsert: { user: new mongoose.Types.ObjectId(userId) } },
+            { new: true, upsert: true, runValidators: true }
+        ).populate(['user', 'industry', 'hiring.preferredSkills', 'projects.active', 'projects.completed']);
 
         res.status(200).json({
             success: true,
@@ -184,14 +224,9 @@ exports.updateCompany = async (req, res) => {
 
         const profile = await ClientProfile.findOneAndUpdate(
             { user: new mongoose.Types.ObjectId(userId) },
-            { $set: { company } },
-            { new: true, runValidators: true }
+            { $set: { company }, $setOnInsert: { user: new mongoose.Types.ObjectId(userId) } },
+            { new: true, upsert: true, runValidators: true }
         );
-
-        if (!profile) {
-            // create a new profile
-            profile = await ClientProfile.create({ user: new mongoose.Types.ObjectId(userId), company });
-        }
 
         res.status(200).json({
             success: true,
@@ -220,13 +255,9 @@ exports.updateBusinessDetails = async (req, res) => {
 
         const profile = await ClientProfile.findOneAndUpdate(
             { user: new mongoose.Types.ObjectId(userId) },
-            { $set: { businessDetails } },
-            { new: true, runValidators: true }
+            { $set: { businessDetails }, $setOnInsert: { user: new mongoose.Types.ObjectId(userId) } },
+            { new: true, upsert: true, runValidators: true }
         );
-
-        if (!profile) {
-            profile = await ClientProfile.create({ user: new mongoose.Types.ObjectId(userId), businessDetails });
-        }
 
         res.status(200).json({
             success: true,
@@ -261,9 +292,10 @@ exports.addTeamMember = async (req, res) => {
                         ...teamMember,
                         user: new mongoose.Types.ObjectId(teamMember.user)
                     }
-                }
+                },
+                $setOnInsert: { user: new mongoose.Types.ObjectId(userId) }
             },
-            { new: true, runValidators: true }
+            { new: true, upsert: true, runValidators: true }
         ).populate('team.user', 'firstName lastName email avatar');
 
         if (!profile) {
@@ -323,41 +355,36 @@ exports.removeTeamMember = async (req, res) => {
     }
 };
 
-// Update Financials
+// Update Financials (partial-safe)
 exports.updateFinancials = async (req, res) => {
     try {
         const userId = req.user.id;
         const { financials } = req.body;
 
         if (!isValidObjectId(userId)) {
-            return res.status(400).json({
-                success: false,
-                error: 'Invalid user ID format'
-            });
+            return res.status(400).json({ success: false, error: 'Invalid user ID format' });
         }
+        if (!financials || typeof financials !== 'object') {
+            return res.status(400).json({ success: false, error: 'Invalid financials payload' });
+        }
+
+        // Build partial $set update to avoid wiping sub-docs when omitted
+        const set = {};
+        if (Object.prototype.hasOwnProperty.call(financials, 'currency')) set['financials.currency'] = financials.currency;
+        if (Object.prototype.hasOwnProperty.call(financials, 'billingEmail')) set['financials.billingEmail'] = financials.billingEmail;
+        if (Object.prototype.hasOwnProperty.call(financials, 'invoiceNotes')) set['financials.invoiceNotes'] = financials.invoiceNotes;
+        if (Object.prototype.hasOwnProperty.call(financials, 'billingAddress')) set['financials.billingAddress'] = financials.billingAddress || {};
+        if (Object.prototype.hasOwnProperty.call(financials, 'paymentMethods')) set['financials.paymentMethods'] = financials.paymentMethods || [];
 
         const profile = await ClientProfile.findOneAndUpdate(
             { user: new mongoose.Types.ObjectId(userId) },
-            { $set: { financials } },
-            { new: true, runValidators: true }
+            { $set: set, $setOnInsert: { user: new mongoose.Types.ObjectId(userId) } },
+            { new: true, upsert: true, runValidators: true }
         );
 
-        if (!profile) {
-            return res.status(404).json({
-                success: false,
-                error: 'Client profile not found'
-            });
-        }
-
-        res.status(200).json({
-            success: true,
-            data: profile.financials
-        });
+        return res.status(200).json({ success: true, data: profile.financials });
     } catch (error) {
-        res.status(400).json({
-            success: false,
-            error: error.message
-        });
+        return res.status(400).json({ success: false, error: error.message });
     }
 };
 
@@ -368,34 +395,47 @@ exports.addPaymentMethod = async (req, res) => {
         const { paymentMethod } = req.body;
 
         if (!isValidObjectId(userId)) {
-            return res.status(400).json({
-                success: false,
-                error: 'Invalid user ID format'
-            });
+            return res.status(400).json({ success: false, error: 'Invalid user ID format' });
+        }
+        if (!paymentMethod || !paymentMethod.type) {
+            return res.status(400).json({ success: false, error: 'Invalid payment method payload' });
+        }
+        const validTypes = ['Credit Card', 'PayPal', 'Bank Transfer'];
+        if (!validTypes.includes(paymentMethod.type)) {
+            return res.status(400).json({ success: false, error: 'Unsupported payment method type' });
+        }
+        // Normalize and validate
+        if (paymentMethod.type === 'Credit Card') {
+            if (!paymentMethod.lastFour || !/^\d{4}$/.test(String(paymentMethod.lastFour))) {
+                return res.status(400).json({ success: false, error: 'lastFour must be 4 digits' });
+            }
+            // Allow MM/YY string (from older clients) or Date/ISO string
+            if (paymentMethod.expiryDate && typeof paymentMethod.expiryDate === 'string' && /^(\d{2})\/(\d{2})$/.test(paymentMethod.expiryDate)) {
+                const [, mm, yy] = paymentMethod.expiryDate.match(/^(\d{2})\/(\d{2})$/);
+                const year = 2000 + Number(yy);
+                const monthIndex = Math.max(0, Math.min(11, Number(mm) - 1));
+                paymentMethod.expiryDate = new Date(Date.UTC(year, monthIndex, 1));
+            }
+        } else {
+            delete paymentMethod.lastFour;
+            delete paymentMethod.expiryDate;
         }
 
-        const profile = await ClientProfile.findOneAndUpdate(
-            { user: new mongoose.Types.ObjectId(userId) },
-            { $push: { 'financials.paymentMethods': paymentMethod } },
-            { new: true, runValidators: true }
-        );
-
+        // Ensure single default
+        const profile = await ClientProfile.findOne({ user: new mongoose.Types.ObjectId(userId) });
         if (!profile) {
-            return res.status(404).json({
-                success: false,
-                error: 'Client profile not found'
-            });
+            return res.status(404).json({ success: false, error: 'Client profile not found' });
         }
+        if (!Array.isArray(profile.financials?.paymentMethods)) profile.financials.paymentMethods = [];
+        if (paymentMethod.isDefault) {
+            profile.financials.paymentMethods.forEach(m => m.isDefault = false);
+        }
+        profile.financials.paymentMethods.push(paymentMethod);
+        await profile.save();
 
-        res.status(200).json({
-            success: true,
-            data: profile.financials.paymentMethods
-        });
+        return res.status(200).json({ success: true, data: profile.financials.paymentMethods });
     } catch (error) {
-        res.status(400).json({
-            success: false,
-            error: error.message
-        });
+        return res.status(400).json({ success: false, error: error.message });
     }
 };
 
@@ -406,34 +446,20 @@ exports.removePaymentMethod = async (req, res) => {
         const { methodId } = req.params;
 
         if (!isValidObjectId(userId) || !isValidObjectId(methodId)) {
-            return res.status(400).json({
-                success: false,
-                error: 'Invalid ID format'
-            });
+            return res.status(400).json({ success: false, error: 'Invalid ID format' });
         }
 
-        const profile = await ClientProfile.findOneAndUpdate(
-            { user: new mongoose.Types.ObjectId(userId) },
-            { $pull: { 'financials.paymentMethods': { _id: new mongoose.Types.ObjectId(methodId) } } },
-            { new: true }
-        );
-
-        if (!profile) {
-            return res.status(404).json({
-                success: false,
-                error: 'Client profile not found'
-            });
+        const profile = await ClientProfile.findOne({ user: new mongoose.Types.ObjectId(userId) });
+        if (!profile) return res.status(404).json({ success: false, error: 'Client profile not found' });
+        const before = profile.financials?.paymentMethods?.length || 0;
+        profile.financials.paymentMethods = (profile.financials.paymentMethods || []).filter(m => String(m._id) !== String(methodId));
+        if (profile.financials.paymentMethods.length === before) {
+            return res.status(404).json({ success: false, error: 'Payment method not found' });
         }
-
-        res.status(200).json({
-            success: true,
-            data: profile.financials.paymentMethods
-        });
+        await profile.save();
+        return res.status(200).json({ success: true, data: profile.financials.paymentMethods });
     } catch (error) {
-        res.status(400).json({
-            success: false,
-            error: error.message
-        });
+        return res.status(400).json({ success: false, error: error.message });
     }
 };
 

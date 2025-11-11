@@ -57,7 +57,23 @@ exports.getMyProfile = async (req, res) => {
 // Get Freelancer Profile
 exports.getProfile = async (req, res) => {
     try {
-        const profile = await FreelancerProfile.findOne({ user: req.params.userId })
+        let { userId } = req.params;
+
+        // Resolve non-ObjectId identifiers (username/email) to user _id
+        if (!mongoose.isValidObjectId(userId)) {
+            const userDoc = await User.findOne({
+                $or: [
+                    { username: userId },
+                    { email: userId }
+                ]
+            }).select('_id');
+            if (!userDoc) {
+                return res.status(400).json({ success: false, error: 'Invalid user identifier' });
+            }
+            userId = userDoc._id;
+        }
+
+        const profile = await FreelancerProfile.findOne({ user: new mongoose.Types.ObjectId(userId) })
             .populate('skills.skill')
             .populate('user', 'firstName lastName email avatar');
 

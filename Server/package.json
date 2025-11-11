@@ -32,6 +32,7 @@
     "passport-twitter": "^1.0.4",
     "qrcode": "^1.5.4",
     "razorpay": "^2.9.6",
+    "socket.io": "^4.8.1",
     "speakeasy": "^2.0.0"
   }
 }

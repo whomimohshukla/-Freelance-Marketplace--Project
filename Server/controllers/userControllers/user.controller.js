@@ -415,7 +415,7 @@ const login = async (req, res) => {
 			});
 	} catch (error) {
 		console.error("Login error:", error);
-		res.status(500).json({
+		return res.status(500).json({
 			success: false,
 			message: "Login failed",
 			error: error.message,
@@ -426,12 +426,14 @@ const login = async (req, res) => {
 const updateProfile = async (req, res) => {
 	try {
 		const userId = req.user.id;
-		const { firstName, lastName, phoneNumber, location } = req.body;
+		const { firstName, lastName, phoneNumber, location, avatar: avatarFromBody } = req.body;
 
 		let avatar;
 		if (req.file) {
 			const result = await uploadToCloudinary(req.file, "avatars");
 			avatar = result.url;
+		} else if (avatarFromBody) {
+			avatar = avatarFromBody; // accept direct URL from uploads API
 		}
 
 		const updatedUser = await User.findByIdAndUpdate(
@@ -446,14 +448,14 @@ const updateProfile = async (req, res) => {
 			{ new: true, runValidators: true }
 		).select("-password");
 
-		res.json({
+		return res.json({
 			success: true,
 			message: "Profile updated successfully",
 			data: updatedUser,
 		});
 	} catch (error) {
 		console.error("Profile update error:", error);
-		res.status(500).json({
+		return res.status(500).json({
 			success: false,
 			message: "Profile update failed",
 		});

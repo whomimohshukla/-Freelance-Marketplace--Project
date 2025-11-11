@@ -67,6 +67,12 @@ const clientProfileSchema = new mongoose.Schema({
         }]
     },
     financials: {
+        currency: {
+            type: String,
+            default: 'USD'
+        },
+        billingEmail: String,
+        invoiceNotes: String,
         totalSpent: {
             type: Number,
             default: 0
