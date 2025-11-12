@@ -5,7 +5,7 @@ import SettingsLayout from "./pages/Settings/SettingsLayout";
 import NotificationsSettings from "./pages/Settings/NotificationsSettings";
 import BillingSettings from "./pages/Settings/BillingSettings";
 import TwoFactorSettings from "./pages/Settings/TwoFactorSettings";
-import SocialAccountsSettings from "./pages/Settings/SocialAccountsSettings";
+import SocialSettings from "./pages/Settings/SocialSettings";
 import App from "./App";
 import SearchProjects from "./components/features/SearchProjects";
 import SecurePayments from "./components/features/SecurePayments";
@@ -31,6 +31,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import CookiePolicy from "./pages/CookiePolicy";
 import ProfileView from "./pages/ProfileView";
+import FreelancerProfile from "./pages/FreelancerProfile";
 import ProfileSettings from './pages/Settings/ProfileSettings';
 import PortfolioSettings from "./pages/Settings/PortfolioSettings";
 import SkillsSettings from "./pages/Settings/SkillsSettings";
@@ -42,6 +43,11 @@ import Orders from "./pages/Orders";
 import Earnings from "./pages/Earnings";
 import ProposalsPage from "./pages/Dashboard/Proposals";
 import HelpCenterPage from "./pages/HelpCenterPage";
+import TeamSettings from './pages/Settings/TeamSettings';
+import FinancialsSettings from './pages/Settings/FinancialsSettings';
+import PreferencesSettings from './pages/Settings/PreferencesSettings';
+import ClientDashboard from './pages/ClientDashboard';
+import FreelancerDashboard from './pages/FreelancerDashboard';
 
 export const router = createBrowserRouter([
   {
@@ -67,6 +73,10 @@ export const router = createBrowserRouter([
       {
         path: "features/find-talent",
         element: <FindTalent />,
+      },
+      {
+        path: "freelancer/:userId",
+        element: <FreelancerProfile />,
       },
       {
         path: "/become-freelancer",
@@ -159,28 +169,48 @@ export const router = createBrowserRouter([
       {
         element: <ProtectedRoute />,
         children: [
+          // Dashboard routes
+          { 
+            path: "dashboard/client", 
+            element: <RoleRoute allowed={['client']} />,
+            children: [
+              { index: true, element: <ClientDashboard /> },
+            ],
+          },
+          { 
+            path: "dashboard/freelancer", 
+            element: <RoleRoute allowed={['freelancer']} />,
+            children: [
+              { index: true, element: <FreelancerDashboard /> },
+            ],
+          },
+          // Settings routes
           {
-          path: "settings",
-          element: <SettingsLayout />,
-          children: [
-            { index: true, element: <Navigate to="/settings/profile" replace /> },
-            { path: "profile", element: <ProfileSettings /> },
-            { path: "portfolio", element: <PortfolioSettings /> },
-            { path: "skills", element: <SkillsSettings /> },
-            { path: "work-experience", element: <ProfileSettings /> /* WorkExperienceSettings TODO*/ },
-            { path: "education", element: <ProfileSettings /> /* EducationSettings TODO */ },
-            { path: "certifications", element: <ProfileSettings /> /* CertificationsSettings TODO */ },
-            { path: "availability", element: <ProfileSettings /> /* AvailabilitySettings TODO */ },
-            { path: "company", element: <CompanySettings /> },
-            { path: "business-details", element: <BusinessDetailsSettings /> },
-            { path: "change-password", element: <ChangePassword /> },
-            { path: "2fa", element: <TwoFactorSettings /> },
-            { path: "social", element: <SocialAccountsSettings /> },
-            { path: "notifications", element: <NotificationsSettings /> },
-            { path: "billing", element: <BillingSettings /> },
-            { path: "delete-account", element: <DeleteAccount /> },
-          ],
-        },
+            path: "settings",
+            element: <SettingsLayout />,
+            children: [
+              { index: true, element: <Navigate to="/settings/profile" replace /> },
+              { path: "profile", element: <ProfileSettings /> },
+              { path: "portfolio", element: <PortfolioSettings /> },
+              { path: "skills", element: <SkillsSettings /> },
+              { path: "work-experience", element: <ProfileSettings /> /* WorkExperienceSettings TODO*/ },
+              { path: "education", element: <ProfileSettings /> /* EducationSettings TODO */ },
+              { path: "certifications", element: <ProfileSettings /> /* CertificationsSettings TODO */ },
+              { path: "availability", element: <ProfileSettings /> /* AvailabilitySettings TODO */ },
+              { path: "company", element: <CompanySettings /> },
+              { path: "business-details", element: <BusinessDetailsSettings /> },
+              { path: "team", element: <TeamSettings /> },
+              { path: "financials", element: <FinancialsSettings /> },
+              { path: "preferences", element: <PreferencesSettings /> },
+              { path: "change-password", element: <ChangePassword /> },
+              { path: "2fa", element: <TwoFactorSettings /> },
+              { path: "social", element: <SocialSettings /> },
+              { path: "notifications", element: <NotificationsSettings /> },
+              { path: "billing", element: <BillingSettings /> },
+              { path: "delete-account", element: <DeleteAccount /> },
+            ],
+          },
+          // Freelancer-specific routes
           {
             element: <RoleRoute allowed={['freelancer']} />,
             children: [

@@ -39,22 +39,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Check whether user has completed required profile; redirect if not
+  // Check whether user has completed required profile (optional check, no forced redirect)
   const checkProfileCompletion = async (usr: User) => {
+    // No longer forcing redirect - users can complete profile via Settings
+    // This just checks if profile exists but doesn't block navigation
     try {
       if (usr.role === 'freelancer') {
         await freelancerApi.getMyProfile();
       } else if (usr.role === 'client') {
         await clientApi.getMyProfile();
       }
-      // success: profile exists
+      // Profile exists - user is good to go
     } catch (err: any) {
-      const status = err?.response?.status;
-      if (status === 404) {
-        if (window.location.pathname !== '/create-profile') {
-          window.location.href = '/create-profile';
-        }
-      }
+      // Profile doesn't exist - user can still navigate
+      // They'll see prompts in dashboard to complete profile via Settings
+      console.log('Profile not yet created - user can complete it in Settings');
     }
   };
 
@@ -119,6 +118,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     storage.setItem('user', JSON.stringify(usr));
     setToken(tkn);
     setUser(usr);
+    // ensure real-time and onboarding checks apply when setAuth is used directly
+    connectSocket(tkn);
+    checkProfileCompletion(usr).catch(() => {});
   };
 
   const value: AuthContextValue = {

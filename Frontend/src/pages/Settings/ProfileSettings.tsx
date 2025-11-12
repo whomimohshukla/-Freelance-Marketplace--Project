@@ -3,6 +3,9 @@ import { FiSave } from 'react-icons/fi';
 import freelancerApi from '../../api/freelancerApi';
 import clientApi from '../../api/clientApi';
 import { useRole } from '../../hooks/useRole';
+import http from '../../api/http';
+import { useAuth } from '../../context/AuthContext';
+import { getClientProfileFromCache, setClientProfileCache } from '../../utils/clientProfileCache';
 
 interface FreelancerForm {
   fullName: string;
@@ -20,8 +23,11 @@ interface ClientForm {
 
 const ProfileSettings: React.FC = () => {
   const role = useRole();
+  const { user: authUser, token, setAuth } = useAuth();
   const [avatarPreview, setAvatarPreview] = useState<string>('');
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const [freelancerForm, setFreelancerForm] = useState<FreelancerForm>({
     fullName: '',
@@ -64,6 +70,8 @@ const ProfileSettings: React.FC = () => {
               description: p.company?.description || '',
             });
             if (p.user?.avatar) setAvatarPreview(p.user.avatar);
+            const remember = !!localStorage.getItem('user');
+            setClientProfileCache(p, remember);
           }
         }
       } catch (err) {
@@ -75,11 +83,31 @@ const ProfileSettings: React.FC = () => {
     })();
   }, [role]);
 
+  useEffect(() => {
+    const cached = getClientProfileFromCache();
+    if (!cached) return;
+    if (role === 'client') {
+      setClientForm({
+        contactName: cached.contactName || '',
+        companyName: cached.company?.name || '',
+        website: cached.company?.website || '',
+        description: cached.company?.description || '',
+      });
+      if (cached.user?.avatar) setAvatarPreview(cached.user.avatar);
+    } else if (role === 'freelancer' && cached.user) {
+      setFreelancerForm((prev) => ({
+        ...prev,
+        fullName: `${cached.user.firstName || ''} ${cached.user.lastName || ''}`.trim() || prev.fullName,
+      }));
+      if (cached.user?.avatar) setAvatarPreview(cached.user.avatar);
+    }
+  }, [role]);
+
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setAvatarPreview(URL.createObjectURL(file));
-      // TODO: upload file with formData on save
+      setAvatarFile(file);
     }
   };
 
@@ -95,6 +123,70 @@ const ProfileSettings: React.FC = () => {
     e.preventDefault();
     try {
       setLoading(true);
+      setToast(null);
+      let avatarUrl: string | undefined;
+      if (avatarFile) {
+        const toDataUrl = (file: File) => new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        const dataUrl = await toDataUrl(avatarFile);
+        const uploadRes = await http.post('/uploads', { file: dataUrl, folder: 'avatars', resource_type: 'image' });
+        avatarUrl = uploadRes.data?.url;
+      }
+      if (role === 'freelancer') {
+        const name = freelancerForm.fullName.trim();
+        const [firstName, ...rest] = name.split(' ');
+        const lastName = rest.join(' ').trim();
+        const userPayload: any = {};
+        if (firstName) userPayload.firstName = firstName;
+        if (lastName) userPayload.lastName = lastName;
+        if (avatarUrl) userPayload.avatar = avatarUrl;
+        if (Object.keys(userPayload).length) {
+          const res = await http.put('/users/profile', userPayload);
+          const updated = res.data?.data;
+          if (updated) {
+            const useLocal = !!localStorage.getItem('user');
+            const storage = useLocal ? localStorage : sessionStorage;
+            const nextUser = {
+              ...(JSON.parse(storage.getItem('user') || '{}')),
+              ...authUser,
+              firstName: updated.firstName,
+              lastName: updated.lastName,
+              avatar: updated.avatar,
+            } as any;
+            storage.setItem('user', JSON.stringify(nextUser));
+            if (token) setAuth(nextUser, token, useLocal);
+          }
+        }
+      } else if (role === 'client') {
+        const name = clientForm.contactName.trim();
+        const [firstName, ...rest] = name.split(' ');
+        const lastName = rest.join(' ').trim();
+        const userPayload: any = {};
+        if (firstName) userPayload.firstName = firstName;
+        if (lastName) userPayload.lastName = lastName;
+        if (avatarUrl) userPayload.avatar = avatarUrl;
+        if (Object.keys(userPayload).length) {
+          const res = await http.put('/users/profile', userPayload);
+          const updated = res.data?.data;
+          if (updated) {
+            const useLocal = !!localStorage.getItem('user');
+            const storage = useLocal ? localStorage : sessionStorage;
+            const nextUser = {
+              ...(JSON.parse(storage.getItem('user') || '{}')),
+              ...authUser,
+              firstName: updated.firstName,
+              lastName: updated.lastName,
+              avatar: updated.avatar,
+            } as any;
+            storage.setItem('user', JSON.stringify(nextUser));
+            if (token) setAuth(nextUser, token, useLocal);
+          }
+        }
+      }
       if (role === 'freelancer') {
         const payload: any = {};
         if (freelancerForm.title.trim()) payload.title = freelancerForm.title.trim();
@@ -117,8 +209,41 @@ const ProfileSettings: React.FC = () => {
           await clientApi.updateProfile({ contactName: payload.contactName });
         }
       }
-    } catch (err) {
-      console.error(err);
+      // reload canonical profile into the form
+      if (role === 'freelancer') {
+        try {
+          const res = await freelancerApi.getMyProfile();
+          const p = res.data.data;
+          if (p) {
+            setFreelancerForm({
+              fullName: `${p.user?.firstName || ''} ${p.user?.lastName || ''}`.trim(),
+              title: p.title || '',
+              bio: p.bio || '',
+              hourlyRate: p.hourlyRate || '',
+            });
+            if (p.user?.avatar) setAvatarPreview(p.user.avatar);
+          }
+        } catch (_) {}
+      } else if (role === 'client') {
+        try {
+          const res = await clientApi.getMyProfile();
+          const p = res.data.data;
+          if (p) {
+            setClientForm({
+              contactName: p.contactName || '',
+              companyName: p.company?.name || '',
+              website: p.company?.website || '',
+              description: p.company?.description || '',
+            });
+            if (p.user?.avatar) setAvatarPreview(p.user.avatar);
+            const remember = !!localStorage.getItem('user');
+            setClientProfileCache(p, remember);
+          }
+        } catch (_) {}
+      }
+      setToast({ type: 'success', text: 'Profile saved successfully' });
+    } catch (err: any) {
+      setToast({ type: 'error', text: err?.response?.data?.error || 'Failed to save profile' });
     } finally {
       setLoading(false);
     }
@@ -130,6 +255,11 @@ const ProfileSettings: React.FC = () => {
     <section className="w-full bg-primary text-white pb-20 pt-10">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="text-3xl font-semibold mb-6">Profile Settings</h1>
+        {toast && (
+          <div className={`mb-4 px-4 py-2 rounded-lg text-sm ${toast.type === 'success' ? 'bg-green-600/20 text-green-300 border border-green-700/50' : 'bg-red-600/20 text-red-300 border border-red-700/50'}`}>
+            {toast.text}
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Avatar */}
           <div>

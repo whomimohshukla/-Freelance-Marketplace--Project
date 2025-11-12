@@ -223,11 +223,188 @@ const sendPasswordResetEmail = async (email, { name, resetUrl }) => {
     text: `Reset your SkillBridge password. Please visit: ${resetUrl}. This link will expire in 1 hour.`
   });
 };
- 
+
+// Send account deletion scheduled email
+const sendDeletionScheduledEmail = async (email, { name, scheduledFor, restoreUrl }) => {
+  const subject = "Your SkillBridge account is scheduled for deletion";
+  const when = new Date(scheduledFor).toLocaleString();
+  const html = `
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif; background-color: #f9fafb; border-radius: 10px;">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <h1 style="color: #1a56db; margin: 0; font-size: 22px;">SkillBridge</h1>
+        <p style="color: #6b7280; margin-top: 6px;">Account Deletion Scheduled</p>
+      </div>
+      <div style="background-color: #ffffff; padding: 22px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.06);">
+        <p style="color: #374151;">Hello ${name || ''},</p>
+        <p style="color: #4b5563; line-height: 1.6;">You requested to delete your SkillBridge account. Your account is scheduled for deletion on <strong>${when}</strong>.</p>
+        <p style="color: #4b5563; line-height: 1.6;">If you change your mind, you can restore your account any time before the scheduled date by clicking the button below:</p>
+        <div style="text-align: center; margin: 24px 0;">
+          <a href="${restoreUrl}" style="background-color: #16a34a; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600;">Restore Account</a>
+        </div>
+        <p style="color: #6b7280; font-size: 13px;">If you didn't request this, please contact our support immediately.</p>
+      </div>
+      <div style="text-align: center; margin-top: 18px; color: #6b7280; font-size: 12px;">
+        <p style="margin: 4px 0;">&copy; ${new Date().getFullYear()} SkillBridge. All rights reserved.</p>
+      </div>
+    </div>
+  `;
+  const text = `Your SkillBridge account is scheduled for deletion on ${when}. To restore: ${restoreUrl}`;
+  return sendEmail({ to: email, subject, html, text });
+};
+
+// Send hire invitation email to freelancer
+const sendHireInvitationEmail = async (email, { 
+  freelancerName, 
+  clientName, 
+  projectTitle, 
+  projectDescription, 
+  budgetType, 
+  budgetAmount, 
+  duration, 
+  startDate,
+  skills,
+  clientMessage,
+  invitationUrl 
+}) => {
+  const subject = `🎉 New Project Invitation from ${clientName}`;
+  const formattedBudget = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD'
+  }).format(budgetAmount);
+  
+  const html = `
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f9fafb; border-radius: 10px;">
+      <!-- Header -->
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #10b981; margin: 0; font-size: 28px;">SkillBridge</h1>
+        <p style="color: #6b7280; margin-top: 5px; font-size: 14px;">Where Talent Meets Opportunity</p>
+      </div>
+
+      <!-- Main Content -->
+      <div style="background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+        <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 20px; border-radius: 8px; margin-bottom: 25px; text-align: center;">
+          <h2 style="color: #ffffff; margin: 0; font-size: 22px;">🎉 You've Got a New Project Invitation!</h2>
+        </div>
+
+        <p style="color: #374151; font-size: 16px; margin-top: 0;">Hi ${freelancerName},</p>
+        
+        <p style="color: #4b5563; line-height: 1.6;">Great news! <strong>${clientName}</strong> is impressed with your profile and would like to invite you to work on their project.</p>
+
+        <!-- Project Details Card -->
+        <div style="background-color: #f9fafb; padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #10b981;">
+          <h3 style="color: #10b981; margin-top: 0; font-size: 20px;">${projectTitle}</h3>
+          
+          <div style="margin: 15px 0;">
+            <p style="color: #6b7280; font-size: 14px; font-weight: 600; margin: 5px 0;">PROJECT DESCRIPTION:</p>
+            <p style="color: #4b5563; line-height: 1.6; margin: 8px 0;">${projectDescription}</p>
+          </div>
+
+          <!-- Project Specs Grid -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px;">
+            <div style="background-color: #ffffff; padding: 15px; border-radius: 6px;">
+              <p style="color: #6b7280; font-size: 12px; margin: 0; font-weight: 600;">💰 BUDGET</p>
+              <p style="color: #10b981; font-size: 18px; font-weight: bold; margin: 5px 0;">${formattedBudget}</p>
+              <p style="color: #9ca3af; font-size: 12px; margin: 0;">${budgetType} Price</p>
+            </div>
+            
+            <div style="background-color: #ffffff; padding: 15px; border-radius: 6px;">
+              <p style="color: #6b7280; font-size: 12px; margin: 0; font-weight: 600;">⏱️ DURATION</p>
+              <p style="color: #374151; font-size: 16px; font-weight: bold; margin: 5px 0;">${duration}</p>
+              ${startDate ? `<p style="color: #9ca3af; font-size: 12px; margin: 0;">Start: ${new Date(startDate).toLocaleDateString()}</p>` : ''}
+            </div>
+          </div>
+
+          ${skills && skills.length > 0 ? `
+          <div style="margin-top: 20px;">
+            <p style="color: #6b7280; font-size: 14px; font-weight: 600; margin-bottom: 10px;">🔧 REQUIRED SKILLS:</p>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+              ${skills.map(skill => `<span style="background-color: #d1fae5; color: #065f46; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">${skill}</span>`).join('')}
+            </div>
+          </div>
+          ` : ''}
+        </div>
+
+        ${clientMessage ? `
+        <!-- Client Message -->
+        <div style="background-color: #eff6ff; padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #3b82f6;">
+          <p style="color: #1e40af; font-size: 14px; font-weight: 600; margin: 0 0 10px 0;">💬 MESSAGE FROM ${clientName.toUpperCase()}:</p>
+          <p style="color: #1e3a8a; line-height: 1.6; margin: 0; font-style: italic;">"${clientMessage}"</p>
+        </div>
+        ` : ''}
+
+        <!-- Call to Action -->
+        <p style="color: #4b5563; line-height: 1.6; margin-top: 25px;">This is a great opportunity to showcase your skills and grow your portfolio. Review the project details and respond to the invitation:</p>
+
+        <div style="text-align: center; margin: 35px 0;">
+          <a href="${invitationUrl}" 
+             style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; padding: 14px 35px; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);">
+            View & Respond to Invitation
+          </a>
+        </div>
+
+        <p style="color: #9ca3af; font-size: 13px; line-height: 1.6; margin-top: 20px;">
+          ⚠️ <strong>Important:</strong> This invitation will expire in 7 days. Make sure to respond before it expires!
+        </p>
+
+        <!-- Info Box -->
+        <div style="background-color: #fef3c7; padding: 15px; border-radius: 6px; margin-top: 20px; border-left: 4px solid #f59e0b;">
+          <p style="color: #92400e; margin: 0; font-size: 13px;">
+            <strong>🛡️ Safe & Secure:</strong> All payments are held in escrow until project completion. Your work is protected by SkillBridge's secure payment system.
+          </p>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div style="margin-top: 30px; text-align: center; color: #6b7280; font-size: 14px;">
+        <p style="margin: 5px 0; font-weight: 600;">Need Help?</p>
+        <p style="margin: 5px 0;">
+          <a href="${process.env.FRONTEND_URL}/help" style="color: #10b981; text-decoration: none;">Visit our Help Center</a> or 
+          <a href="mailto:support@skillbridge.com" style="color: #10b981; text-decoration: none;">Contact Support</a>
+        </p>
+        <p style="margin: 15px 0 5px 0;">&copy; ${new Date().getFullYear()} SkillBridge. All rights reserved.</p>
+        <p style="margin: 5px 0; font-size: 12px; color: #9ca3af;">This is an automated notification. Please do not reply to this email.</p>
+      </div>
+    </div>
+  `;
+
+  const text = `
+New Project Invitation from ${clientName}!
+
+Hi ${freelancerName},
+
+You've received a project invitation on SkillBridge!
+
+Project: ${projectTitle}
+Description: ${projectDescription}
+Budget: ${formattedBudget} (${budgetType})
+Duration: ${duration}
+${startDate ? `Start Date: ${new Date(startDate).toLocaleDateString()}` : ''}
+${skills && skills.length > 0 ? `Skills Required: ${skills.join(', ')}` : ''}
+
+${clientMessage ? `Message from ${clientName}: "${clientMessage}"` : ''}
+
+View and respond to this invitation: ${invitationUrl}
+
+This invitation expires in 7 days.
+
+Best regards,
+The SkillBridge Team
+  `;
+
+  return sendEmail({ 
+    to: email, 
+    subject, 
+    html,
+    text
+  });
+};
+
 module.exports = {
   sendEmail,
   sendOTPEmail,
   sendWelcomeEmail,
   sendLoginNotificationEmail,
   sendPasswordResetEmail,
+  sendDeletionScheduledEmail,
+  sendHireInvitationEmail,
 };

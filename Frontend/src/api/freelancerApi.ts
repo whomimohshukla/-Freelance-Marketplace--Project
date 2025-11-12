@@ -21,4 +21,20 @@ export default {
   // Availability / stats
   updateAvailability: (availability: any) => http.put('/freelancers/availability', { availability }),
   updateStats: (stats: any) => http.put('/freelancers/stats', { stats }),
+
+  // Search freelancers with filters
+  searchFreelancers: (params: {
+    q?: string;
+    skills?: string;           // comma-separated skill names or IDs
+    minRate?: number;
+    maxRate?: number;
+    availability?: string;
+    location?: string;
+    languages?: string;        // comma-separated languages
+    minRating?: number;
+    minExperience?: number;
+    sort?: 'relevance' | 'rate_asc' | 'rate_desc' | 'rating' | 'experience';
+    page?: number;
+    limit?: number;
+  }) => http.get('/freelancers/search', { params }),
 };

@@ -119,7 +119,11 @@ const Navbar: React.FC = () => {
                       <img src={avatarUrl} alt="avatar" className="w-10 h-10 rounded-full object-cover" />
                       <div>
                         <p className="text-sm font-semibold text-white leading-none">{user.firstName ?? 'User'}</p>
-                        <Link to={`/profile/${user.firstName ?? user._id}`} className="text-xs text-code-green hover:underline">View Profile</Link>
+                        {user.role === 'freelancer' ? (
+                          <Link to={`/profile/${user._id}`} className="text-xs text-code-green hover:underline">View Profile</Link>
+                        ) : (
+                          <Link to="/settings/profile" className="text-xs text-code-green hover:underline">View Profile</Link>
+                        )}
                       </div>
                     </div>
 
@@ -196,7 +200,11 @@ const Navbar: React.FC = () => {
 
             {user ? (
               <>
-                <Link to={`/profile/${user.firstName ?? user._id}`} onClick={handleMobileNavigate} className="block px-6 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors">Profile</Link>
+                {user.role === 'freelancer' ? (
+                  <Link to={`/profile/${user._id}`} onClick={handleMobileNavigate} className="block px-6 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors">Profile</Link>
+                ) : (
+                  <Link to="/settings/profile" onClick={handleMobileNavigate} className="block px-6 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors">Profile</Link>
+                )}
                 <Link to="/orders" onClick={handleMobileNavigate} className="block px-6 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors">Orders</Link>
                 <Link to="/earnings" onClick={handleMobileNavigate} className="block px-6 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors">Earnings</Link>
                 <Link to="/help-center" onClick={handleMobileNavigate} className="block px-6 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors">Help Center</Link>

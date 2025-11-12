@@ -1,26 +1,64 @@
-import React, { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiSearch, FiFilter, FiStar, FiMapPin, FiDollarSign, FiClock, FiAward, FiSliders, FiBriefcase, FiCheck, FiHeart, FiMessageSquare } from 'react-icons/fi';
+import { FiSearch, FiStar, FiMapPin, FiDollarSign, FiAward, FiSliders, FiBriefcase, FiCheck, FiHeart, FiMessageSquare, FiLoader } from 'react-icons/fi';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import freelancerApi from '../../api/freelancerApi';
+import { listSkills, listPopularSkills } from '../../api/skills';
+import { toast } from 'react-hot-toast';
+import { debounce } from 'lodash';
 
 interface Talent {
-  id: string;
-  name: string;
-  avatar: string;
+  _id: string;
+  user: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    avatar?: string;
+    location?: {
+      current?: {
+        city?: string;
+        country?: string;
+      };
+    };
+  };
   title: string;
-  rating: number;
+  bio: string;
   hourlyRate: number;
-  location: string;
-  skills: string[];
-  description: string;
-  completedProjects: number;
-  successRate: number;
-  availability: string;
-  languages: string[];
-  verificationBadges: string[];
-  portfolio: {
+  skills: Array<{
+    skill: {
+      _id: string;
+      name: string;
+      category?: string;
+    };
+    experienceLevel: string;
+    yearsOfExperience?: number;
+  }>;
+  rating: {
+    average: number;
+    count: number;
+  };
+  stats: {
+    completedProjects: number;
+    successRate: number;
+  };
+  availability: {
+    status: string;
+    hoursPerWeek?: number;
+  };
+  languages: Array<{
+    language: string;
+    proficiency: string;
+  }>;
+  portfolio?: Array<{
     title: string;
-    image: string;
-  }[];
+    images: Array<{ url: string; caption?: string }>;
+  }>;
+}
+
+interface Skill {
+  _id: string;
+  name: string;
+  category: string;
 }
 
 interface FilterState {
@@ -34,10 +72,11 @@ interface FilterState {
 }
 
 const FindTalent = () => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedTalent, setSelectedTalent] = useState<Talent | null>(null);
   const [filters, setFilters] = useState<FilterState>({
     hourlyRate: [0, 150],
     skills: [],
@@ -49,93 +88,94 @@ const FindTalent = () => {
   });
 
   const [activeCategory, setActiveCategory] = useState<string>('');
+  const [freelancers, setFreelancers] = useState<Talent[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, pages: 0 });
+  const [, setAvailableSkills] = useState<Skill[]>([]);
+  const [, setPopularSkills] = useState<Skill[]>([]);
+  const isMountedRef = useRef(false);
 
-  const mockTalent: Talent[] = [
-    {
-      id: '1',
-      name: 'Sarah Chen',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah',
-      title: 'Full Stack Developer',
-      rating: 4.9,
-      hourlyRate: 45,
-      location: 'San Francisco, USA',
-      skills: ['React', 'Node.js', 'TypeScript', 'MongoDB'],
-      description: 'Experienced full-stack developer specializing in React and Node.js. Strong focus on clean code and scalable architecture.',
-      completedProjects: 87,
-      successRate: 98,
-      availability: 'Full-time',
-      languages: ['English', 'Mandarin'],
-      verificationBadges: ['ID Verified', 'Skills Tested', 'Payment Verified'],
-      portfolio: [
-        {
-          title: 'E-commerce Platform',
-          image: 'https://picsum.photos/seed/1/300/200'
-        },
-        {
-          title: 'Social Media Dashboard',
-          image: 'https://picsum.photos/seed/2/300/200'
-        }
-      ]
-    },
-    {
-      id: '2',
-      name: 'Michael Rodriguez',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Michael',
-      title: 'UI/UX Designer',
-      rating: 4.8,
-      hourlyRate: 55,
-      location: 'London, UK',
-      skills: ['Figma', 'Adobe XD', 'UI Design', 'User Research'],
-      description: 'Creative UI/UX designer with a passion for creating intuitive and beautiful user experiences.',
-      completedProjects: 64,
-      successRate: 96,
-      availability: 'Part-time',
-      languages: ['English', 'Spanish'],
-      verificationBadges: ['ID Verified', 'Skills Tested'],
-      portfolio: [
-        {
-          title: 'Mobile App Design',
-          image: 'https://picsum.photos/seed/3/300/200'
-        },
-        {
-          title: 'Web Design',
-          image: 'https://picsum.photos/seed/4/300/200'
-        }
-      ]
-    },
-    {
-      id: '3',
-      name: 'Emma Wilson',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emma',
-      title: 'Mobile Developer',
-      rating: 4.7,
-      hourlyRate: 50,
-      location: 'Berlin, Germany',
-      skills: ['React Native', 'iOS', 'Android', 'Flutter'],
-      description: 'Mobile development expert with extensive experience in cross-platform development.',
-      completedProjects: 52,
-      successRate: 94,
-      availability: 'Hourly',
-      languages: ['English', 'German'],
-      verificationBadges: ['ID Verified', 'Payment Verified'],
-      portfolio: [
-        {
-          title: 'iOS App Development',
-          image: 'https://picsum.photos/seed/5/300/200'
-        },
-        {
-          title: 'Android App Development',
-          image: 'https://picsum.photos/seed/6/300/200'
-        }
-      ]
+  // Fetch popular skills on mount
+  useEffect(() => {
+    const fetchSkills = async () => {
+      try {
+        const [popularRes, allRes] = await Promise.all([
+          listPopularSkills(20),
+          listSkills({ limit: 100 })
+        ]);
+        if (popularRes.data.success) setPopularSkills(popularRes.data.data);
+        if (allRes.data.success) setAvailableSkills(allRes.data.data);
+      } catch (error) {
+        console.error('Failed to fetch skills:', error);
+      }
+    };
+    fetchSkills();
+  }, []);
+
+
+  // Create stable debounced search function
+  const debouncedSearchRef = useRef(
+    debounce((params: any) => {
+      setLoading(true);
+      freelancerApi.searchFreelancers(params)
+        .then(response => {
+          if (response.data.success) {
+            setFreelancers(response.data.data);
+            setPagination(response.data.pagination);
+          }
+        })
+        .catch((error: any) => {
+          console.error('Search error:', error);
+          toast.error(error.response?.data?.error || 'Failed to search freelancers');
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }, 300)
+  );
+
+  // Trigger search when filters change
+  useEffect(() => {
+    // Skip on initial mount
+    if (!isMountedRef.current) {
+      isMountedRef.current = true;
+      return;
     }
-  ];
+
+    const params: any = {
+      page: pagination.page,
+      limit: pagination.limit
+    };
+    if (searchQuery) params.q = searchQuery;
+    if (selectedSkills.length > 0) params.skills = selectedSkills.join(',');
+    if (filters.hourlyRate[0] > 0) params.minRate = filters.hourlyRate[0];
+    if (filters.hourlyRate[1] < 150) params.maxRate = filters.hourlyRate[1];
+    if (filters.availability.length > 0) params.availability = filters.availability[0];
+    if (filters.location.length > 0) params.location = filters.location[0];
+    if (filters.languages.length > 0) params.languages = filters.languages.join(',');
+    if (filters.rating > 0) params.minRating = filters.rating;
+
+    // Update URL params
+    const urlParams = new URLSearchParams();
+    Object.keys(params).forEach(key => {
+      if (params[key]) urlParams.set(key, params[key].toString());
+    });
+    setSearchParams(urlParams);
+
+    debouncedSearchRef.current(params);
+
+    // Cleanup debounce on unmount
+    return () => {
+      debouncedSearchRef.current.cancel();
+    };
+  }, [searchQuery, selectedSkills, filters, pagination.page, setSearchParams]);
+
 
   const availabilityOptions = ['Full-time', 'Part-time', 'Hourly', 'As Needed'];
   const languageOptions = ['English', 'Spanish', 'Mandarin', 'Hindi', 'Arabic'];
   const locationOptions = ['North America', 'Europe', 'Asia', 'South America', 'Africa'];
 
-  const skillCategories = {
+  const skillCategories: Record<string, string[]> = {
     'Frontend Development': [
       'React', 'Vue.js', 'Angular', 'Next.js', 'TypeScript', 
       'HTML/CSS', 'Tailwind CSS', 'Material UI', 'JavaScript',
@@ -176,39 +216,8 @@ const FindTalent = () => {
     );
   };
 
-  const filteredTalent = mockTalent.filter(talent => {
-    // Filter by skills
-    if (selectedSkills.length > 0 && !talent.skills.some(skill => selectedSkills.includes(skill))) {
-      return false;
-    }
-    
-    // Filter by hourly rate
-    if (talent.hourlyRate < filters.hourlyRate[0] || talent.hourlyRate > filters.hourlyRate[1]) {
-      return false;
-    }
-
-    // Filter by availability
-    if (filters.availability.length > 0 && !filters.availability.includes(talent.availability)) {
-      return false;
-    }
-
-    // Filter by rating
-    if (filters.rating > 0 && talent.rating < filters.rating) {
-      return false;
-    }
-
-    // Filter by location
-    if (filters.location.length > 0 && !filters.location.some(loc => talent.location.includes(loc))) {
-      return false;
-    }
-
-    // Filter by languages
-    if (filters.languages.length > 0 && !talent.languages.some(lang => filters.languages.includes(lang))) {
-      return false;
-    }
-
-    return true;
-  });
+  // Use real data from backend
+  const filteredTalent = freelancers;
 
   const handleFilterChange = (key: keyof FilterState, value: any) => {
     setFilters(prev => ({
@@ -364,11 +373,11 @@ const FindTalent = () => {
 
               {activeCategory && (
                 <div>
-                  <h4 className="text-white font-medium mb-3">Popular {activeCategory} Skills</h4>
+                  <h4 className="text-white font-medium mb-3">Popular {String(activeCategory)} Skills</h4>
                   <div className="flex flex-wrap gap-2">
-                    {skillCategories[activeCategory].map((skill) => (
+                    {skillCategories[activeCategory].map((skill: string) => (
                       <button
-                        key={skill}
+                        key={String(skill)}
                         onClick={() => handleSkillSelect(skill)}
                         className={`px-3 py-1 rounded-full text-sm transition-colors ${
                           selectedSkills.includes(skill)
@@ -376,7 +385,7 @@ const FindTalent = () => {
                             : 'bg-gray-700/50 text-white hover:bg-gray-600/50'
                         }`}
                       >
-                        {skill}
+                        {String(skill)}
                       </button>
                     ))}
                   </div>
@@ -390,10 +399,10 @@ const FindTalent = () => {
                   <div className="flex flex-wrap gap-2">
                     {selectedSkills.map((skill) => (
                       <span
-                        key={skill}
+                        key={String(skill)}
                         className="px-3 py-1 bg-code-green text-gray-900 rounded-full text-sm flex items-center gap-1"
                       >
-                        {skill}
+                        {String(skill)}
                         <button
                           onClick={() => handleSkillSelect(skill)}
                           className="hover:text-red-600"
@@ -459,20 +468,53 @@ const FindTalent = () => {
           <div className="lg:col-span-3">
             {/* Results Summary */}
             <div className="mb-6">
-              <h3 className="text-white text-lg font-medium">
-                {filteredTalent.length} Freelancers Found
-                {selectedSkills.length > 0 && (
-                  <span className="text-gray-400 text-sm">
-                    {' '}matching your selected skills
-                  </span>
+              <div className="flex items-center justify-between">
+                <h3 className="text-white text-lg font-medium">
+                  {loading ? 'Searching...' : `${Number(pagination.total) || 0} Freelancers Found`}
+                  {selectedSkills.length > 0 && (
+                    <span className="text-gray-400 text-sm">
+                      {' '}matching your selected skills
+                    </span>
+                  )}
+                </h3>
+                {pagination.pages > 1 && (
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
+                      disabled={pagination.page === 1 || loading}
+                      className="px-3 py-1 bg-gray-800 text-white rounded disabled:opacity-50"
+                    >
+                      Previous
+                    </button>
+                    <span className="text-gray-400 text-sm">Page {Number(pagination.page)} of {Number(pagination.pages)}</span>
+                    <button
+                      onClick={() => setPagination(prev => ({ ...prev, page: Math.min(prev.page + 1, pagination.pages) }))}
+                      disabled={pagination.page === pagination.pages || loading}
+                      className="px-3 py-1 bg-gray-800 text-white rounded disabled:opacity-50"
+                    >
+                      Next
+                    </button>
+                  </div>
                 )}
-              </h3>
+              </div>
             </div>
 
+            {loading && (
+              <div className="flex items-center justify-center py-12">
+                <FiLoader className="w-8 h-8 text-code-green animate-spin" />
+              </div>
+            )}
+
+            {!loading && filteredTalent.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-gray-400">No freelancers found matching your criteria.</p>
+              </div>
+            )}
+
             <div className="space-y-6">
-              {filteredTalent.map((talent) => (
+              {!loading && filteredTalent.map((talent) => (
                 <motion.div
-                  key={talent.id}
+                  key={talent._id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="bg-gray-800/50 backdrop-blur-xl rounded-xl border border-gray-700/50 p-6 hover:border-code-green/40 transition-all duration-300"
@@ -482,9 +524,9 @@ const FindTalent = () => {
                     <div className="flex gap-4 md:w-2/3">
                       <div className="relative">
                         <img
-                          src={talent.avatar}
-                          alt={talent.name}
-                          className="w-16 h-16 rounded-full"
+                          src={talent.user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${talent.user?.firstName}`}
+                          alt={`${talent.user?.firstName} ${talent.user?.lastName}`}
+                          className="w-16 h-16 rounded-full object-cover"
                         />
                         <div className="absolute -top-2 -right-2 bg-code-green text-gray-900 rounded-full p-1">
                           <FiCheck className="w-4 h-4" />
@@ -492,7 +534,7 @@ const FindTalent = () => {
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
-                          <h3 className="text-white font-medium">{talent.name}</h3>
+                          <h3 className="text-white font-medium">{talent.user?.firstName} {talent.user?.lastName}</h3>
                           <div className="flex items-center gap-2">
                             <button className="p-2 text-gray-400 hover:text-code-green transition-colors">
                               <FiHeart className="w-5 h-5" />
@@ -506,15 +548,25 @@ const FindTalent = () => {
                         <div className="flex items-center gap-4 text-sm text-gray-400">
                           <div className="flex items-center gap-1">
                             <FiStar className="text-yellow-500" />
-                            <span>{talent.rating}</span>
+                            <span>{
+                              typeof talent.rating?.average === 'number'
+                                ? talent.rating.average.toFixed(1)
+                                : '0.0'
+                            } ({Number(talent.rating?.count) || 0})</span>
                           </div>
-                          <div className="flex items-center gap-1">
-                            <FiMapPin className="text-gray-500" />
-                            <span>{talent.location}</span>
-                          </div>
+                          {talent.user?.location?.current?.city && (
+                            <div className="flex items-center gap-1">
+                              <FiMapPin className="text-gray-500" />
+                              <span>
+                                {[talent.user.location.current.city, talent.user.location.current.country]
+                                  .filter(Boolean)
+                                  .join(', ')}
+                              </span>
+                            </div>
+                          )}
                           <div className="flex items-center gap-1">
                             <FiDollarSign className="text-gray-500" />
-                            <span>${talent.hourlyRate}/hr</span>
+                            <span>${Number(talent.hourlyRate) || 0}/hr</span>
                           </div>
                         </div>
                       </div>
@@ -525,26 +577,29 @@ const FindTalent = () => {
                       <div className="flex flex-wrap gap-4 text-sm mb-4">
                         <div className="flex items-center gap-1 text-gray-400">
                           <FiBriefcase />
-                          <span>{talent.completedProjects} projects</span>
+                          <span>{Number(talent.stats?.completedProjects) || 0} projects</span>
                         </div>
                         <div className="flex items-center gap-1 text-gray-400">
                           <FiAward />
-                          <span>{talent.successRate}% success</span>
+                          <span>{Number(talent.stats?.successRate) || 0}% success</span>
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-2 mb-4">
-                        {talent.verificationBadges.map((badge, index) => (
+                        <span className="px-2 py-1 bg-code-green/10 text-code-green rounded-full text-xs">
+                          {String(talent.availability?.status || 'Available')}
+                        </span>
+                        {Array.isArray(talent.languages) && talent.languages.slice(0, 2).map((lang: any, index: number) => (
                           <span
                             key={index}
-                            className="px-2 py-1 bg-code-green/10 text-code-green rounded-full text-xs"
+                            className="px-2 py-1 bg-gray-700/50 text-gray-300 rounded-full text-xs"
                           >
-                            {badge}
+                            {String(lang?.language || '')}
                           </span>
                         ))}
                       </div>
                       <button 
-                        onClick={() => setSelectedTalent(talent)}
-                        className="w-full px-4 py-2 bg-code-green text-gray-900 rounded-xl hover:bg-code-green/90 transition-colors"
+                        onClick={() => navigate(`/freelancer/${talent.user?._id}`)}
+                        className="w-full px-4 py-2 bg-code-green text-gray-900 rounded-xl hover:bg-code-green/90 transition-colors font-semibold"
                       >
                         View Profile
                       </button>
@@ -552,33 +607,33 @@ const FindTalent = () => {
                   </div>
 
                   <div className="mt-4">
-                    <p className="text-gray-400 text-sm mb-4">{talent.description}</p>
+                    <p className="text-gray-400 text-sm mb-4">{String(talent.bio || '')}</p>
                     <div className="flex flex-wrap gap-2">
-                      {talent.skills.map((skill) => (
+                      {Array.isArray(talent.skills) && talent.skills.slice(0, 6).map((skillItem: any, idx: number) => (
                         <span
-                          key={skill}
+                          key={idx}
                           className="px-3 py-1 bg-gray-700/50 text-gray-300 rounded-full text-sm"
                         >
-                          {skill}
+                          {String(skillItem?.skill?.name || 'Skill')}
                         </span>
                       ))}
                     </div>
                   </div>
 
                   {/* Portfolio Preview */}
-                  {talent.portfolio && (
+                  {Array.isArray(talent.portfolio) && talent.portfolio.length > 0 && (
                     <div className="mt-6">
                       <h4 className="text-white text-sm font-medium mb-3">Recent Work</h4>
                       <div className="grid grid-cols-2 gap-4">
-                        {talent.portfolio.map((item, index) => (
+                        {talent.portfolio.slice(0, 2).map((item: any, index: number) => (
                           <div key={index} className="relative group">
                             <img
-                              src={item.image}
-                              alt={item.title}
+                              src={item.images?.[0]?.url || 'https://picsum.photos/seed/portfolio/300/200'}
+                              alt={String(item?.title || 'Portfolio')}
                               className="w-full h-32 object-cover rounded-lg"
                             />
                             <div className="absolute inset-0 bg-gray-900/80 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                              <span className="text-white text-sm">{item.title}</span>
+                              <span className="text-white text-sm">{String(item?.title || '')}</span>
                             </div>
                           </div>
                         ))}

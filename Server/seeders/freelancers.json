@@ -1,0 +1,470 @@
+[
+  {
+    "user": "67cc59addbe569066f0a003f",
+    "title": "Senior Full Stack Developer",
+    "bio": "Experienced developer with 5+ years in web development. Specialized in MERN stack and cloud solutions.",
+    "skills": [
+      {
+        "skill": "67ece4bb8096314ae8ea0c4e",
+        "experienceLevel": "Expert",
+        "yearsOfExperience": 5
+      }
+    ],
+    "hourlyRate": 50,
+    "availability": {
+      "status": "Available",
+      "hoursPerWeek": 40,
+      "timezone": "UTC+5:30"
+    },
+    "rating": {
+      "average": 5,
+      "count": 3
+    },
+    "stats": {
+      "totalEarnings": 50000,
+      "completedProjects": 25,
+      "ongoingProjects": 3,
+      "successRate": 95
+    },
+    "preferences": {
+      "projectTypes": [],
+      "industries": []
+    },
+    "portfolio": [
+      {
+        "title": "E-commerce Platform",
+        "description": "Built a full-stack e-commerce platform with payment integration",
+        "projectUrl": "https://example-ecommerce.com",
+        "images": [
+          {
+            "url": "https://images.unsplash.com/photo-1557821552-17105176677c?w=800",
+            "caption": "Homepage"
+          }
+        ],
+        "technologies": ["React", "Node.js", "MongoDB", "Stripe"],
+        "completionDate": "2024-01-15T00:00:00.000Z"
+      }
+    ],
+    "education": [
+      {
+        "institution": "University of Technology",
+        "degree": "Bachelor's",
+        "field": "Computer Science",
+        "startDate": "2016-09-01T00:00:00.000Z",
+        "endDate": "2020-05-31T00:00:00.000Z",
+        "current": false,
+        "description": "Major in Software Engineering"
+      }
+    ],
+    "workExperience": [
+      {
+        "company": "Tech Corp",
+        "position": "Senior Developer",
+        "description": "Led development team of 5 engineers",
+        "startDate": "2020-01-01T00:00:00.000Z",
+        "current": true,
+        "achievements": ["Increased performance by 50%", "Reduced server costs by 30%"]
+      }
+    ],
+    "certifications": [
+      {
+        "name": "AWS Certified Developer",
+        "issuer": "Amazon Web Services",
+        "issueDate": "2024-01-01T00:00:00.000Z",
+        "expiryDate": "2027-01-01T00:00:00.000Z",
+        "credentialUrl": "https://aws.amazon.com/certification/verify"
+      }
+    ],
+    "languages": [
+      {
+        "language": "English",
+        "proficiency": "Native"
+      },
+      {
+        "language": "Hindi",
+        "proficiency": "Fluent"
+      }
+    ],
+    "socialProfiles": {
+      "github": "https://github.com/seniordev",
+      "linkedin": "https://linkedin.com/in/seniordev",
+      "website": "https://portfolio-senior.com",
+      "stackoverflow": "https://stackoverflow.com/users/123456"
+    }
+  },
+  {
+    "user": "67cc59addbe569066f0a0040",
+    "title": "UI/UX Designer & Frontend Developer",
+    "bio": "Creative designer with strong frontend development skills. 4+ years creating beautiful, user-friendly interfaces.",
+    "skills": [
+      {
+        "skill": "67ece4bb8096314ae8ea0c4e",
+        "experienceLevel": "Expert",
+        "yearsOfExperience": 4
+      }
+    ],
+    "hourlyRate": 45,
+    "availability": {
+      "status": "Available",
+      "hoursPerWeek": 30,
+      "timezone": "UTC+0"
+    },
+    "rating": {
+      "average": 4.8,
+      "count": 12
+    },
+    "stats": {
+      "totalEarnings": 35000,
+      "completedProjects": 42,
+      "ongoingProjects": 2,
+      "successRate": 98
+    },
+    "preferences": {
+      "projectTypes": [],
+      "industries": []
+    },
+    "portfolio": [
+      {
+        "title": "SaaS Dashboard Redesign",
+        "description": "Complete UI/UX redesign for a B2B SaaS platform",
+        "projectUrl": "https://example-saas.com",
+        "images": [
+          {
+            "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800",
+            "caption": "Dashboard Overview"
+          }
+        ],
+        "technologies": ["Figma", "React", "TailwindCSS", "Framer Motion"],
+        "completionDate": "2024-03-20T00:00:00.000Z"
+      }
+    ],
+    "education": [
+      {
+        "institution": "Design Institute",
+        "degree": "Masters",
+        "field": "Digital Design",
+        "startDate": "2018-09-01T00:00:00.000Z",
+        "endDate": "2020-06-30T00:00:00.000Z",
+        "current": false,
+        "description": "Focus on UX Research and Interface Design"
+      }
+    ],
+    "workExperience": [
+      {
+        "company": "Design Studio Pro",
+        "position": "Lead Designer",
+        "description": "Managing design team and client projects",
+        "startDate": "2021-03-01T00:00:00.000Z",
+        "current": true,
+        "achievements": ["Won Design Award 2023", "Client satisfaction rate 100%"]
+      }
+    ],
+    "certifications": [
+      {
+        "name": "Google UX Design Certificate",
+        "issuer": "Google",
+        "issueDate": "2023-06-15T00:00:00.000Z",
+        "credentialUrl": "https://coursera.org/verify/cert123"
+      }
+    ],
+    "languages": [
+      {
+        "language": "English",
+        "proficiency": "Fluent"
+      },
+      {
+        "language": "Spanish",
+        "proficiency": "Intermediate"
+      }
+    ],
+    "socialProfiles": {
+      "github": "https://github.com/uxdesigner",
+      "linkedin": "https://linkedin.com/in/uxdesigner",
+      "website": "https://uxportfolio.com",
+      "dribbble": "https://dribbble.com/uxdesigner"
+    }
+  },
+  {
+    "user": "67cc59addbe569066f0a0041",
+    "title": "Mobile App Developer (iOS & Android)",
+    "bio": "Specialized in cross-platform mobile development with React Native and Flutter. Built 50+ mobile apps.",
+    "skills": [
+      {
+        "skill": "67ece4bb8096314ae8ea0c4e",
+        "experienceLevel": "Expert",
+        "yearsOfExperience": 5
+      }
+    ],
+    "hourlyRate": 55,
+    "availability": {
+      "status": "Partially Available",
+      "hoursPerWeek": 20,
+      "timezone": "UTC-5"
+    },
+    "rating": {
+      "average": 4.9,
+      "count": 28
+    },
+    "stats": {
+      "totalEarnings": 75000,
+      "completedProjects": 50,
+      "ongoingProjects": 5,
+      "successRate": 96
+    },
+    "preferences": {
+      "projectTypes": [],
+      "industries": []
+    },
+    "portfolio": [
+      {
+        "title": "Fitness Tracking App",
+        "description": "Cross-platform fitness app with 100k+ downloads",
+        "projectUrl": "https://play.google.com/store/apps/fitness",
+        "images": [
+          {
+            "url": "https://images.unsplash.com/photo-1551434678-e076c223a692?w=800",
+            "caption": "App Screenshots"
+          }
+        ],
+        "technologies": ["React Native", "Firebase", "Redux", "Google Fit API"],
+        "completionDate": "2023-11-10T00:00:00.000Z"
+      }
+    ],
+    "education": [
+      {
+        "institution": "Tech University",
+        "degree": "Bachelor's",
+        "field": "Software Engineering",
+        "startDate": "2015-08-01T00:00:00.000Z",
+        "endDate": "2019-05-30T00:00:00.000Z",
+        "current": false
+      }
+    ],
+    "workExperience": [
+      {
+        "company": "Mobile Solutions Inc",
+        "position": "Senior Mobile Developer",
+        "description": "Leading mobile development projects",
+        "startDate": "2019-07-01T00:00:00.000Z",
+        "current": true,
+        "achievements": ["Published 50+ apps", "Average 4.5+ star rating"]
+      }
+    ],
+    "certifications": [
+      {
+        "name": "React Native Certification",
+        "issuer": "Meta",
+        "issueDate": "2023-03-10T00:00:00.000Z",
+        "credentialUrl": "https://meta.com/verify/rn123"
+      }
+    ],
+    "languages": [
+      {
+        "language": "English",
+        "proficiency": "Native"
+      }
+    ],
+    "socialProfiles": {
+      "github": "https://github.com/mobiledev",
+      "linkedin": "https://linkedin.com/in/mobiledev",
+      "website": "https://mobileportfolio.com"
+    }
+  },
+  {
+    "user": "67cc59addbe569066f0a0042",
+    "title": "DevOps Engineer & Cloud Architect",
+    "bio": "Expert in AWS, Docker, Kubernetes. 6+ years optimizing infrastructure and deployment pipelines.",
+    "skills": [
+      {
+        "skill": "67ece4bb8096314ae8ea0c4e",
+        "experienceLevel": "Expert",
+        "yearsOfExperience": 6
+      }
+    ],
+    "hourlyRate": 60,
+    "availability": {
+      "status": "Available",
+      "hoursPerWeek": 35,
+      "timezone": "UTC+1"
+    },
+    "rating": {
+      "average": 5,
+      "count": 15
+    },
+    "stats": {
+      "totalEarnings": 90000,
+      "completedProjects": 35,
+      "ongoingProjects": 4,
+      "successRate": 97
+    },
+    "preferences": {
+      "projectTypes": [],
+      "industries": []
+    },
+    "portfolio": [
+      {
+        "title": "Enterprise CI/CD Pipeline",
+        "description": "Automated deployment pipeline reducing deployment time by 80%",
+        "projectUrl": "https://example-devops.com",
+        "images": [
+          {
+            "url": "https://images.unsplash.com/photo-1667372393119-3d4c48d07fc9?w=800",
+            "caption": "Pipeline Architecture"
+          }
+        ],
+        "technologies": ["AWS", "Docker", "Kubernetes", "Jenkins", "Terraform"],
+        "completionDate": "2024-02-28T00:00:00.000Z"
+      }
+    ],
+    "education": [
+      {
+        "institution": "Engineering College",
+        "degree": "Bachelor's",
+        "field": "Computer Engineering",
+        "startDate": "2014-08-01T00:00:00.000Z",
+        "endDate": "2018-05-30T00:00:00.000Z",
+        "current": false
+      }
+    ],
+    "workExperience": [
+      {
+        "company": "Cloud Solutions Ltd",
+        "position": "Lead DevOps Engineer",
+        "description": "Architecting cloud infrastructure for enterprise clients",
+        "startDate": "2018-07-01T00:00:00.000Z",
+        "current": true,
+        "achievements": ["Reduced cloud costs by 40%", "99.99% uptime achieved"]
+      }
+    ],
+    "certifications": [
+      {
+        "name": "AWS Solutions Architect Professional",
+        "issuer": "Amazon Web Services",
+        "issueDate": "2023-08-15T00:00:00.000Z",
+        "expiryDate": "2026-08-15T00:00:00.000Z",
+        "credentialUrl": "https://aws.amazon.com/certification/verify"
+      },
+      {
+        "name": "Certified Kubernetes Administrator",
+        "issuer": "CNCF",
+        "issueDate": "2023-05-20T00:00:00.000Z",
+        "expiryDate": "2026-05-20T00:00:00.000Z",
+        "credentialUrl": "https://cncf.io/verify/cka123"
+      }
+    ],
+    "languages": [
+      {
+        "language": "English",
+        "proficiency": "Fluent"
+      },
+      {
+        "language": "German",
+        "proficiency": "Intermediate"
+      }
+    ],
+    "socialProfiles": {
+      "github": "https://github.com/devopspro",
+      "linkedin": "https://linkedin.com/in/devopspro",
+      "website": "https://devops-portfolio.com"
+    }
+  },
+  {
+    "user": "67cc59addbe569066f0a0043",
+    "title": "Data Scientist & Machine Learning Engineer",
+    "bio": "PhD in Machine Learning. 7+ years building AI models and data pipelines. Published researcher.",
+    "skills": [
+      {
+        "skill": "67ece4bb8096314ae8ea0c4e",
+        "experienceLevel": "Expert",
+        "yearsOfExperience": 7
+      }
+    ],
+    "hourlyRate": 70,
+    "availability": {
+      "status": "Partially Available",
+      "hoursPerWeek": 15,
+      "timezone": "UTC-8"
+    },
+    "rating": {
+      "average": 5,
+      "count": 8
+    },
+    "stats": {
+      "totalEarnings": 120000,
+      "completedProjects": 18,
+      "ongoingProjects": 3,
+      "successRate": 100
+    },
+    "preferences": {
+      "projectTypes": [],
+      "industries": []
+    },
+    "portfolio": [
+      {
+        "title": "Predictive Analytics Platform",
+        "description": "Built ML models achieving 95% accuracy for customer behavior prediction",
+        "projectUrl": "https://example-ml.com",
+        "images": [
+          {
+            "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800",
+            "caption": "Model Performance Dashboard"
+          }
+        ],
+        "technologies": ["Python", "TensorFlow", "PyTorch", "Scikit-learn", "AWS SageMaker"],
+        "completionDate": "2024-04-10T00:00:00.000Z"
+      }
+    ],
+    "education": [
+      {
+        "institution": "Stanford University",
+        "degree": "PhD",
+        "field": "Machine Learning",
+        "startDate": "2015-09-01T00:00:00.000Z",
+        "endDate": "2020-06-30T00:00:00.000Z",
+        "current": false,
+        "description": "Thesis on Deep Learning for Computer Vision"
+      },
+      {
+        "institution": "MIT",
+        "degree": "Masters",
+        "field": "Data Science",
+        "startDate": "2013-09-01T00:00:00.000Z",
+        "endDate": "2015-05-30T00:00:00.000Z",
+        "current": false
+      }
+    ],
+    "workExperience": [
+      {
+        "company": "AI Research Lab",
+        "position": "Senior ML Engineer",
+        "description": "Leading AI research and development projects",
+        "startDate": "2020-08-01T00:00:00.000Z",
+        "current": true,
+        "achievements": ["Published 5 research papers", "Patent holder for ML algorithm"]
+      }
+    ],
+    "certifications": [
+      {
+        "name": "TensorFlow Developer Certificate",
+        "issuer": "Google",
+        "issueDate": "2023-01-10T00:00:00.000Z",
+        "credentialUrl": "https://developers.google.com/certification/verify"
+      }
+    ],
+    "languages": [
+      {
+        "language": "English",
+        "proficiency": "Native"
+      },
+      {
+        "language": "Mandarin",
+        "proficiency": "Intermediate"
+      }
+    ],
+    "socialProfiles": {
+      "github": "https://github.com/mlexpert",
+      "linkedin": "https://linkedin.com/in/mlexpert",
+      "website": "https://ml-research.com"
+    }
+  }
+]

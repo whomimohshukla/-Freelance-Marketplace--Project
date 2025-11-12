@@ -10,6 +10,7 @@ export const changePassword = (currentPassword: string, newPassword: string) =>
   http.put('/users/change-password', { currentPassword, newPassword });
 
 export const deleteAccount = (password: string) => http.delete('/users/delete-account', { data: { password } });
+export const restoreAccount = () => http.post('/users/restore-account');
 
 // Two-Factor Authentication
 export const setup2FA = () => http.post('/users/setup-2fa');

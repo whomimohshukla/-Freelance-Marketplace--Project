@@ -7,7 +7,7 @@ import Spinner from '../../components/ui/Spinner'
 import { FaGoogle, FaGithub, FaLinkedin } from 'react-icons/fa'
 
 const Login = () => {
-  const { login: ctxLogin } = useAuth();
+  const { setAuth } = useAuth();
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
@@ -43,8 +43,8 @@ const Login = () => {
         return; // wait for second step
       }
       if (data.success) {
-        // now fully authenticated
-        await ctxLogin({ email, password }, rememberMe);
+        // fully authenticated: set auth directly to avoid re-login
+        setAuth(data.user, data.token, rememberMe);
         navigate('/settings/profile');
       } else {
         setError(data.message || 'Login failed');

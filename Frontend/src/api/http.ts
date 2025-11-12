@@ -11,19 +11,52 @@ http.interceptors.request.use((config) => {
   return config;
 });
 
+let isRefreshing = false;
+let pendingQueue: Array<(token: string | null) => void> = [];
+
 http.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // If password mismatch on delete-account, don't force logout/redirect
-      if (error.config?.url?.endsWith('/delete-account')) {
-        return Promise.reject(error);
-      }
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      // Optionally redirect to login
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
+  async (error) => {
+    const original = error.config;
+    const status = error.response?.status;
+    if (status === 401 && !original?._retry && !original?.url?.endsWith('/delete-account')) {
+      original._retry = true;
+      try {
+        // queue requests while a single refresh is in-flight
+        if (isRefreshing) {
+          const token = await new Promise<string | null>((resolve) => pendingQueue.push(resolve));
+          if (token) original.headers.Authorization = `Bearer ${token}`;
+          return http(original);
+        }
+        isRefreshing = true;
+        // attempt refresh
+        const { data } = await http.post('/users/refresh-token');
+        const newToken: string | undefined = data?.token;
+        // decide storage based on where user was stored
+        const useLocal = !!localStorage.getItem('user');
+        const storage = useLocal ? localStorage : sessionStorage;
+        if (newToken) {
+          storage.setItem('token', newToken);
+          original.headers.Authorization = `Bearer ${newToken}`;
+        }
+        // drain queue
+        pendingQueue.forEach((resolve) => resolve(newToken || null));
+        pendingQueue = [];
+        return http(original);
+      } catch (e) {
+        // drain with null (force logout)
+        pendingQueue.forEach((resolve) => resolve(null));
+        pendingQueue = [];
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('user');
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+        return Promise.reject(e);
+      } finally {
+        isRefreshing = false;
       }
     }
     return Promise.reject(error);
