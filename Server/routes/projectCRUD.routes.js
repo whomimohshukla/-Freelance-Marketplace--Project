@@ -10,6 +10,12 @@ Router.post("/create", auth, Project.createProject);
 
 Router.get("/", auth, Project.getAllProjects);
 
+// Dashboard routes
+Router.get("/dashboard/client", auth, Project.getClientDashboard);
+Router.get("/dashboard/freelancer", auth, Project.getFreelancerDashboard);
+Router.get("/client/my-projects", auth, Project.getClientProjects);
+Router.get("/freelancer/my-projects", auth, Project.getFreelancerProjects);
+
 // List logged-in freelancer's proposals across projects
 Router.get("/proposals/me", auth, Project.getMyProposals);
 Router.get("/search", auth, Project.searchProjects);

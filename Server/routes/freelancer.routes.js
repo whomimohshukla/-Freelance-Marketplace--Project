@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth.middleware');
 const freelancerController = require('../controllers/core-Project/freelancer/freelancerProfile.controller');
+const reviewController = require('../controllers/core-Project/freelancer/freelancerReview.controller');
 
 
 // freelancers
@@ -56,9 +57,9 @@ router.put('/certifications', auth, freelancerController.updateCertifications);
 router.put('/availability', auth, freelancerController.updateAvailability);
 
 // @route   GET /api/freelancers/search
-// @desc    Search freelancers with filters
+// @desc    Search freelancers with filters (q, skills, minRate, maxRate, availability, location, languages, minRating, minExperience, sort, page, limit)
 // @access  Public
-router.get('/search', freelancerController.getFreelancerProfile);
+router.get('/search', freelancerController.searchFreelancers);
 
 // @route   PUT /api/freelancers/stats
 // @desc    Update freelancer stats
@@ -74,5 +75,32 @@ router.put('/social', auth, freelancerController.updateSocialProfiles);
 // @desc    Get top rated freelancers
 // @access  Public
 router.get('/top-rated', freelancerController.getTopRatedFreelancers);
+
+// ============ REVIEW ROUTES ============
+
+// @route   GET /api/freelancers/:userId/detailed
+// @desc    Get detailed freelancer profile with reviews, rating breakdown, and attributes
+// @access  Public
+router.get('/:userId/detailed', reviewController.getDetailedProfile);
+
+// @route   GET /api/freelancers/:userId/reviews
+// @desc    Get reviews for a freelancer (paginated, filterable by rating)
+// @access  Public
+router.get('/:userId/reviews', reviewController.getFreelancerReviews);
+
+// @route   POST /api/freelancers/reviews
+// @desc    Create a review for a freelancer (after project completion)
+// @access  Private
+router.post('/reviews', auth, reviewController.createReview);
+
+// @route   PUT /api/freelancers/reviews/:reviewId
+// @desc    Update a review
+// @access  Private (only reviewer can update)
+router.put('/reviews/:reviewId', auth, reviewController.updateReview);
+
+// @route   DELETE /api/freelancers/reviews/:reviewId
+// @desc    Delete a review
+// @access  Private (only reviewer can delete)
+router.delete('/reviews/:reviewId', auth, reviewController.deleteReview);
 
 module.exports = router;

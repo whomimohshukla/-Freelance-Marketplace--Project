@@ -3,15 +3,17 @@ const userRoutes = express.Router();
 const useControllers = require("../controllers/userControllers/user.controller");
 const socialAuthController = require("../controllers/userControllers/socialAuth.controller");
 const authMiddleware = require("../middleware/auth.middleware");
+const rateLimit = require("../middleware/rateLimit.middleware");
 
 
 
 //otp routes
-userRoutes.post("/send-otp", useControllers.sendOTP);
-userRoutes.post("/resend-otp", useControllers.resendOTP);
+userRoutes.post("/send-otp", rateLimit({ windowMs: 60_000, max: 5 }), useControllers.sendOTP);
+userRoutes.post("/resend-otp", rateLimit({ windowMs: 60_000, max: 5 }), useControllers.resendOTP);
 // Auth routes
 userRoutes.post("/signup", useControllers.signup);
-userRoutes.post("/login", useControllers.login);
+userRoutes.post("/login", rateLimit({ windowMs: 60_000, max: 10 }), useControllers.login);
+userRoutes.post("/refresh-token", useControllers.refreshToken);
 userRoutes.post("/google-login", useControllers.googleLogin);
 
 // Profile routes
@@ -21,6 +23,11 @@ userRoutes.delete(
   "/delete-account",
   authMiddleware,
   useControllers.deleteAccount
+);
+userRoutes.post(
+  "/restore-account",
+  authMiddleware,
+  useControllers.restoreAccount
 );
 userRoutes.put(
   "/change-password",
