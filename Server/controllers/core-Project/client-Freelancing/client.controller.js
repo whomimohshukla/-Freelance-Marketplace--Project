@@ -27,6 +27,25 @@ exports.updatePreferences = async (req, res) => {
     }
 };
 
+// Update Social Profiles
+exports.updateSocialProfiles = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { socialProfiles } = req.body;
+        if (!isValidObjectId(userId)) {
+            return res.status(400).json({ success: false, error: 'Invalid user ID format' });
+        }
+        const profile = await ClientProfile.findOneAndUpdate(
+            { user: new mongoose.Types.ObjectId(userId) },
+            { $set: { socialProfiles: socialProfiles || {} }, $setOnInsert: { user: new mongoose.Types.ObjectId(userId) } },
+            { new: true, upsert: true, runValidators: true }
+        );
+        return res.status(200).json({ success: true, data: profile.socialProfiles || {} });
+    } catch (error) {
+        return res.status(400).json({ success: false, error: error.message });
+    }
+};
+
 // Search users by email/name for team invite
 exports.searchTeamUsers = async (req, res) => {
     try {
@@ -421,19 +440,22 @@ exports.addPaymentMethod = async (req, res) => {
             delete paymentMethod.expiryDate;
         }
 
-        // Ensure single default
-        const profile = await ClientProfile.findOne({ user: new mongoose.Types.ObjectId(userId) });
-        if (!profile) {
-            return res.status(404).json({ success: false, error: 'Client profile not found' });
+        // Ensure profile exists (avoid creating partial doc that violates required fields like industry)
+        const existing = await ClientProfile.findOne({ user: new mongoose.Types.ObjectId(userId) }).lean();
+        if (!existing) {
+            return res.status(400).json({ success: false, error: 'Complete your client profile before adding payment methods' });
         }
-        if (!Array.isArray(profile.financials?.paymentMethods)) profile.financials.paymentMethods = [];
-        if (paymentMethod.isDefault) {
-            profile.financials.paymentMethods.forEach(m => m.isDefault = false);
-        }
-        profile.financials.paymentMethods.push(paymentMethod);
-        await profile.save();
-
-        return res.status(200).json({ success: true, data: profile.financials.paymentMethods });
+        const current = Array.isArray(existing.financials?.paymentMethods) ? existing.financials.paymentMethods : [];
+        const next = paymentMethod.isDefault
+            ? current.map(m => ({ ...m, isDefault: false }))
+            : current.slice();
+        next.push(paymentMethod);
+        const updated = await ClientProfile.findOneAndUpdate(
+            { user: new mongoose.Types.ObjectId(userId) },
+            { $set: { 'financials.paymentMethods': next } },
+            { new: true, runValidators: false, context: 'query' }
+        ).select('financials.paymentMethods');
+        return res.status(200).json({ success: true, data: updated.financials.paymentMethods });
     } catch (error) {
         return res.status(400).json({ success: false, error: error.message });
     }
@@ -449,15 +471,19 @@ exports.removePaymentMethod = async (req, res) => {
             return res.status(400).json({ success: false, error: 'Invalid ID format' });
         }
 
-        const profile = await ClientProfile.findOne({ user: new mongoose.Types.ObjectId(userId) });
-        if (!profile) return res.status(404).json({ success: false, error: 'Client profile not found' });
-        const before = profile.financials?.paymentMethods?.length || 0;
-        profile.financials.paymentMethods = (profile.financials.paymentMethods || []).filter(m => String(m._id) !== String(methodId));
-        if (profile.financials.paymentMethods.length === before) {
+        const existing = await ClientProfile.findOne({ user: new mongoose.Types.ObjectId(userId) }).lean();
+        if (!existing) return res.status(404).json({ success: false, error: 'Client profile not found' });
+        const current = Array.isArray(existing.financials?.paymentMethods) ? existing.financials.paymentMethods : [];
+        const next = current.filter(m => String(m._id) !== String(methodId));
+        if (next.length === current.length) {
             return res.status(404).json({ success: false, error: 'Payment method not found' });
         }
-        await profile.save();
-        return res.status(200).json({ success: true, data: profile.financials.paymentMethods });
+        const updated = await ClientProfile.findOneAndUpdate(
+            { user: new mongoose.Types.ObjectId(userId) },
+            { $set: { 'financials.paymentMethods': next } },
+            { new: true, runValidators: true, context: 'query' }
+        ).select('financials.paymentMethods');
+        return res.status(200).json({ success: true, data: updated.financials.paymentMethods });
     } catch (error) {
         return res.status(400).json({ success: false, error: error.message });
     }

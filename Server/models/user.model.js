@@ -112,6 +112,10 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    deletionScheduledFor: {
+      type: Date,
+      default: null,
+    },
     authProvider: {
       type: String,
       enum: ["local", "google"],

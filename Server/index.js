@@ -20,6 +20,7 @@ const ratingRoutes = require("../Server/routes/projectRating.routes");
 const socialAuthRoutes = require("../Server/routes/socialAuth.routes");
 const uploadsRoutes = require("../Server/routes/uploads.routes");
 const messagesRoutes = require("../Server/routes/messages.routes");
+const hireRoutes = require("../Server/routes/hire.routes");
 const cors = require("cors");
 
 app.use(express.json({ limit: "10mb" }));
@@ -52,6 +53,7 @@ app.use("/api/v1/rating", ratingRoutes);
 app.use("/api/v1/auth", socialAuthRoutes);
 app.use("/api/v1/uploads", uploadsRoutes);
 app.use("/api/v1/messages", messagesRoutes);
+app.use("/api/v1/hire", hireRoutes);
 
 app.use("/api/v1/teams", teamRoutes);
 

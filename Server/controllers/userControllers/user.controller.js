@@ -57,6 +57,26 @@ const sendOTP = async (req, res) => {
 	res.status(200).json({ message: "OTP sent successfully" });
 };
 
+const restoreAccount = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+        if (!user.isDeleted) return res.json({ success: true, message: 'Account is already active' });
+        if (user.deletionScheduledFor && user.deletionScheduledFor < new Date()) {
+            return res.status(400).json({ success: false, message: 'Deletion window has passed. Account cannot be restored.' });
+        }
+        user.isDeleted = false;
+        user.status = 'active';
+        user.deletionScheduledFor = null;
+        await user.save();
+        return res.json({ success: true, message: 'Account restored successfully' });
+    } catch (error) {
+        console.error('Restore account error:', error);
+        return res.status(500).json({ success: false, message: 'Failed to restore account' });
+    }
+};
+
 const resendOTP = async (req, res) => {
 	try {
 		const { email } = req.body;
@@ -218,6 +238,16 @@ const login = async (req, res) => {
 			return res.status(401).json({
 				success: false,
 				message: "Invalid credentials",
+			});
+		}
+
+		// block soft-deleted users
+		if (user.isDeleted) {
+			return res.status(403).json({
+				success: false,
+				message: user.deletionScheduledFor && user.deletionScheduledFor > new Date()
+					? `Account scheduled for deletion on ${new Date(user.deletionScheduledFor).toDateString()}`
+					: 'Account is deleted',
 			});
 		}
 
@@ -760,7 +790,9 @@ const forgotPassword = async (req, res) => {
 		await user.save();
 
 		const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+         
 
+		console.log("reset link",resetUrl);
 		const emailSent = await emailService.sendPasswordResetEmail(email, {
 			name: `${user.firstName} ${user.lastName}`,
 			resetUrl,
@@ -875,20 +907,21 @@ const getProfile = async (req, res) => {
 			});
 		}
 
-		let profileData = {};
+		let profileData;
 		if (user.role === "freelancer") {
 			const freelancerProfile = await FreelancerProfile.findOne({
 				user: userId,
 			})
 				.populate("skills")
-				.populate("completedProjects")
-				.populate("reviews")
 				.lean();
 			profileData = { ...freelancerProfile };
 		} else if (user.role === "client") {
 			const clientProfile = await ClientProfile.findOne({ user: userId })
-				.populate("postedProjects")
-				.populate("activeProjects")
+				.populate("user", "firstName lastName email avatar")
+				.populate("industry")
+				.populate("hiring.preferredSkills")
+				.populate("projects.active")
+				.populate("projects.completed")
 				.lean();
 			profileData = { ...clientProfile };
 		}
@@ -930,23 +963,17 @@ const deleteAccount = async (req, res) => {
 			});
 		}
 
+		const scheduledFor = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
 		await User.findByIdAndUpdate(userId, {
 			$set: {
 				isDeleted: true,
-				status: "deleted",
-				email: `deleted.${userId}@deleted.com`,
-				firstName: "Deleted",
-				lastName: "User",
-				password: crypto.randomBytes(32).toString("hex"),
-				phoneNumber: null,
-				avatar: null,
-				lastActive: new Date(),
-				location: null,
+				status: "inactive",
+				deletionScheduledFor: scheduledFor,
 				twoFactorEnabled: false,
 				twoFactorSecret: null,
 				resetPasswordToken: null,
 				resetPasswordExpires: null,
-				previousPasswords: [],
+				lastActive: new Date(),
 			},
 		});
 
@@ -962,9 +989,21 @@ const deleteAccount = async (req, res) => {
 			);
 		}
 
+		try {
+			const restoreUrl = `${process.env.FRONTEND_URL || ''}/login`;
+			await emailService.sendDeletionScheduledEmail(user.email, {
+				name: `${user.firstName} ${user.lastName}`.trim(),
+				scheduledFor,
+				restoreUrl,
+			});
+		} catch (e) {
+			console.error('Failed to send deletion scheduled email:', e);
+		}
+
 		res.json({
 			success: true,
-			message: "Account deleted successfully",
+			message: "Account scheduled for deletion in 15 days. You can restore within this period.",
+			scheduledFor,
 		});
 	} catch (error) {
 		console.error("Delete account error:", error);
@@ -1306,4 +1345,5 @@ module.exports = {
 	confirmEmail2FA,
 	logout,
 	refreshToken,
+    restoreAccount,
 };

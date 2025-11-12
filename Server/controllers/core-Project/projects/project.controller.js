@@ -1577,3 +1577,316 @@ exports.canViewProject = async (userId, project) => {
 // 		});
 // 	}
 // };
+
+// ==================== CLIENT & FREELANCER DASHBOARDS ====================
+
+/**
+ * GET CLIENT PROJECTS - Client views all their projects
+ * Features: Filter by status, pagination, stats
+ */
+exports.getClientProjects = async (req, res) => {
+	try {
+		const clientId = req.user.id;
+		const {
+			status,
+			page = 1,
+			limit = 10,
+			sortBy = "createdAt",
+			sortOrder = "desc",
+		} = req.query;
+
+		// Build query
+		const query = { client: clientId };
+		if (status) {
+			query.status = status;
+		}
+
+		const skip = (page - 1) * limit;
+		const sortOptions = {};
+		sortOptions[sortBy] = sortOrder === "desc" ? -1 : 1;
+
+		// Get projects
+		const projects = await Project.find(query)
+			.populate("Industry")
+			.populate("skills.skill", "name")
+			.populate("selectedFreelancer", "firstName lastName avatar email")
+			.populate({
+				path: "proposals.freelancer",
+				select: "firstName lastName avatar",
+			})
+			.populate({
+				path: "proposals.freelancerProfile",
+				select: "title rating hourlyRate",
+			})
+			.sort(sortOptions)
+			.skip(skip)
+			.limit(parseInt(limit));
+
+		const total = await Project.countDocuments(query);
+
+		// Calculate stats
+		const stats = {
+			total: await Project.countDocuments({ client: clientId }),
+			draft: await Project.countDocuments({ client: clientId, status: "Draft" }),
+			open: await Project.countDocuments({ client: clientId, status: "Open" }),
+			inProgress: await Project.countDocuments({
+				client: clientId,
+				status: "In Progress",
+			}),
+			completed: await Project.countDocuments({
+				client: clientId,
+				status: "Completed",
+			}),
+			cancelled: await Project.countDocuments({
+				client: clientId,
+				status: "Cancelled",
+			}),
+		};
+
+		res.json({
+			success: true,
+			projects,
+			stats,
+			pagination: {
+				currentPage: parseInt(page),
+				totalPages: Math.ceil(total / limit),
+				total,
+				hasNext: page * limit < total,
+				hasPrev: page > 1,
+			},
+		});
+	} catch (error) {
+		console.error("Get client projects error:", error);
+		res.status(500).json({
+			success: false,
+			message: "Error fetching client projects",
+			error: error.message,
+		});
+	}
+};
+
+/**
+ * GET FREELANCER PROJECTS - Freelancer views their assigned/active projects
+ * Features: Filter by status, pagination, earnings
+ */
+exports.getFreelancerProjects = async (req, res) => {
+	try {
+		const freelancerId = req.user.id;
+		const {
+			status,
+			page = 1,
+			limit = 10,
+			sortBy = "createdAt",
+			sortOrder = "desc",
+		} = req.query;
+
+		// Build query - projects where freelancer is selected
+		const query = { selectedFreelancer: freelancerId };
+		if (status) {
+			query.status = status;
+		}
+
+		const skip = (page - 1) * limit;
+		const sortOptions = {};
+		sortOptions[sortBy] = sortOrder === "desc" ? -1 : 1;
+
+		// Get projects
+		const projects = await Project.find(query)
+			.populate("client", "firstName lastName avatar email")
+			.populate("Industry")
+			.populate("skills.skill", "name")
+			.sort(sortOptions)
+			.skip(skip)
+			.limit(parseInt(limit));
+
+		const total = await Project.countDocuments(query);
+
+		// Calculate freelancer stats
+		const allProjects = await Project.find({ selectedFreelancer: freelancerId });
+		const completedProjects = allProjects.filter((p) => p.status === "Completed");
+		
+		const stats = {
+			total: allProjects.length,
+			active: await Project.countDocuments({
+				selectedFreelancer: freelancerId,
+				status: "In Progress",
+			}),
+			completed: completedProjects.length,
+			totalEarnings: completedProjects.reduce(
+				(sum, p) => sum + (p.budget.paid || 0),
+				0
+			),
+			pendingPayments: allProjects.reduce(
+				(sum, p) => sum + (p.budget.pending || 0),
+				0
+			),
+		};
+
+		res.json({
+			success: true,
+			projects,
+			stats,
+			pagination: {
+				currentPage: parseInt(page),
+				totalPages: Math.ceil(total / limit),
+				total,
+				hasNext: page * limit < total,
+				hasPrev: page > 1,
+			},
+		});
+	} catch (error) {
+		console.error("Get freelancer projects error:", error);
+		res.status(500).json({
+			success: false,
+			message: "Error fetching freelancer projects",
+			error: error.message,
+		});
+	}
+};
+
+/**
+ * GET CLIENT DASHBOARD STATS - Overview stats for client dashboard
+ */
+exports.getClientDashboard = async (req, res) => {
+	try {
+		const clientId = req.user.id;
+
+		// Get all client projects
+		const allProjects = await Project.find({ client: clientId });
+
+		// Calculate stats
+		const stats = {
+			totalProjects: allProjects.length,
+			activeProjects: allProjects.filter((p) => p.status === "In Progress").length,
+			completedProjects: allProjects.filter((p) => p.status === "Completed")
+				.length,
+			openProjects: allProjects.filter((p) => p.status === "Open").length,
+			totalSpent: allProjects.reduce((sum, p) => sum + (p.budget.paid || 0), 0),
+			pendingPayments: allProjects.reduce(
+				(sum, p) => sum + (p.budget.pending || 0),
+				0
+			),
+			totalProposals: allProjects.reduce(
+				(sum, p) => sum + p.proposals.length,
+				0
+			),
+			averageProjectValue:
+				allProjects.length > 0
+					? allProjects.reduce((sum, p) => sum + p.budget.maxAmount, 0) /
+					  allProjects.length
+					: 0,
+		};
+
+		// Recent projects
+		const recentProjects = await Project.find({ client: clientId })
+			.populate("selectedFreelancer", "firstName lastName avatar")
+			.populate("Industry")
+			.sort({ createdAt: -1 })
+			.limit(5);
+
+		// Pending proposals count
+		const pendingProposalsCount = allProjects.reduce((sum, p) => {
+			return sum + p.proposals.filter((pr) => pr.status === "Pending").length;
+		}, 0);
+
+		res.json({
+			success: true,
+			stats: {
+				...stats,
+				pendingProposals: pendingProposalsCount,
+			},
+			recentProjects,
+		});
+	} catch (error) {
+		console.error("Get client dashboard error:", error);
+		res.status(500).json({
+			success: false,
+			message: "Error fetching client dashboard",
+			error: error.message,
+		});
+	}
+};
+
+/**
+ * GET FREELANCER DASHBOARD STATS - Overview stats for freelancer dashboard
+ */
+exports.getFreelancerDashboard = async (req, res) => {
+	try {
+		const freelancerId = req.user.id;
+
+		// Get all projects where freelancer is selected
+		const allProjects = await Project.find({ selectedFreelancer: freelancerId });
+		const completedProjects = allProjects.filter((p) => p.status === "Completed");
+
+		// Get all proposals submitted by freelancer
+		const projectsWithProposals = await Project.find({
+			"proposals.freelancer": freelancerId,
+		});
+
+		let totalProposals = 0;
+		let acceptedProposals = 0;
+		projectsWithProposals.forEach((p) => {
+			p.proposals.forEach((proposal) => {
+				if (proposal.freelancer.toString() === freelancerId) {
+					totalProposals++;
+					if (proposal.status === "Accepted") acceptedProposals++;
+				}
+			});
+		});
+
+		const stats = {
+			activeProjects: allProjects.filter((p) => p.status === "In Progress")
+				.length,
+			completedProjects: completedProjects.length,
+			totalEarnings: completedProjects.reduce(
+				(sum, p) => sum + (p.budget.paid || 0),
+				0
+			),
+			pendingPayments: allProjects.reduce(
+				(sum, p) => sum + (p.budget.pending || 0),
+				0
+			),
+			totalProposals,
+			acceptedProposals,
+			successRate:
+				totalProposals > 0
+					? ((acceptedProposals / totalProposals) * 100).toFixed(1)
+					: 0,
+			avgProjectValue:
+				completedProjects.length > 0
+					? completedProjects.reduce((sum, p) => sum + p.budget.maxAmount, 0) /
+					  completedProjects.length
+					: 0,
+		};
+
+		// Recent active projects
+		const recentProjects = await Project.find({ selectedFreelancer: freelancerId })
+			.populate("client", "firstName lastName avatar")
+			.populate("Industry")
+			.sort({ createdAt: -1 })
+			.limit(5);
+
+		// Get freelancer profile for additional stats
+		const freelancerProfile = await FreelancerProfile.findOne({
+			user: freelancerId,
+		});
+
+		res.json({
+			success: true,
+			stats,
+			recentProjects,
+			profile: {
+				rating: freelancerProfile?.rating,
+				hourlyRate: freelancerProfile?.hourlyRate,
+				availability: freelancerProfile?.availability,
+			},
+		});
+	} catch (error) {
+		console.error("Get freelancer dashboard error:", error);
+		res.status(500).json({
+			success: false,
+			message: "Error fetching freelancer dashboard",
+			error: error.message,
+		});
+	}
+};

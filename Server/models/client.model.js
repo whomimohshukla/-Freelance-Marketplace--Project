@@ -144,6 +144,7 @@ const clientProfileSchema = new mongoose.Schema({
     }],
     socialProfiles: {
         linkedin: String,
+        github: String,
         twitter: String,
         facebook: String,
         website: String

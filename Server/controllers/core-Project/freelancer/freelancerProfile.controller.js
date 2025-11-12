@@ -1,5 +1,6 @@
 const FreelancerProfile = require('../../../models/freelancer.model');
 const User = require('../../../models/user.model');
+const Review = require('../../../models/review.model');
 const mongoose = require('mongoose');
 
 // Create or Update Freelancer Profile
@@ -240,7 +241,201 @@ exports.updateAvailability = async (req, res) => {
     }
 };
 
-// Search Freelancers
+// Search Freelancers with comprehensive filters (aggregation for accurate filtering/pagination)
+exports.searchFreelancers = async (req, res) => {
+    try {
+        const {
+            q,                    // search query (name, title, bio)
+            skills,               // comma-separated skill IDs or names
+            minRate,
+            maxRate,
+            availability,         // Available, Partially Available, Not Available
+            location,
+            languages,            // comma-separated languages
+            minRating,
+            minExperience,        // minimum years of experience in any skill
+            sort = 'relevance',   // relevance, rate_asc, rate_desc, rating, experience
+            page = 1,
+            limit = 10
+        } = req.query;
+
+        const numericPage = Math.max(1, parseInt(page));
+        const numericLimit = Math.max(1, parseInt(limit));
+
+        // Base match on FreelancerProfile fields
+        const match = {};
+
+        if (q) {
+            match.$or = [
+                { title: { $regex: q, $options: 'i' } },
+                { bio: { $regex: q, $options: 'i' } }
+            ];
+        }
+
+        // Rate range
+        if (minRate || maxRate) {
+            match.hourlyRate = {};
+            if (minRate) match.hourlyRate.$gte = Number(minRate);
+            if (maxRate) match.hourlyRate.$lte = Number(maxRate);
+        }
+
+        // Availability
+        if (availability) {
+            match['availability.status'] = availability;
+        }
+
+        // Languages
+        if (languages) {
+            const langArray = languages.split(',').map(l => l.trim());
+            match['languages.language'] = { $in: langArray };
+        }
+
+        // Rating
+        if (minRating) {
+            match['rating.average'] = { $gte: Number(minRating) };
+        }
+
+        // Experience
+        if (minExperience) {
+            match['skills.yearsOfExperience'] = { $gte: Number(minExperience) };
+        }
+
+        // Skills (resolve names -> ids)
+        if (skills) {
+            const skillArray = skills.split(',').map(s => s.trim());
+            const Skill = require('../../../models/skills.model');
+            const skillDocs = await Skill.find({
+                $or: [
+                    { _id: { $in: skillArray.filter(s => mongoose.isValidObjectId(s)) } },
+                    { name: { $in: skillArray } }
+                ]
+            }).select('_id');
+            const skillIds = skillDocs.map(s => s._id);
+            if (skillIds.length) {
+                match['skills.skill'] = { $in: skillIds };
+            }
+        }
+
+        // Sorting options mapping
+        const sortStage = (() => {
+            switch (sort) {
+                case 'rate_asc':
+                    return { hourlyRate: 1 };
+                case 'rate_desc':
+                    return { hourlyRate: -1 };
+                case 'rating':
+                    return { 'rating.average': -1 };
+                case 'experience':
+                    return { 'skills.yearsOfExperience': -1 };
+                case 'relevance':
+                default:
+                    return { 'rating.average': -1, 'stats.completedProjects': -1 };
+            }
+        })();
+
+        const pipeline = [
+            { $match: match },
+            // Bring in user document for location and basic fields
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'user',
+                    foreignField: '_id',
+                    as: 'user'
+                }
+            },
+            { $unwind: '$user' },
+        ];
+
+        if (location) {
+            pipeline.push({
+                $match: { 'user.location': { $regex: location, $options: 'i' } }
+            });
+        }
+
+        // Lookup skill docs to attach names/categories similar to populate
+        pipeline.push(
+            {
+                $lookup: {
+                    from: 'skills',
+                    localField: 'skills.skill',
+                    foreignField: '_id',
+                    as: 'skillsDocs'
+                }
+            },
+            {
+                $addFields: {
+                    skills: {
+                        $map: {
+                            input: '$skills',
+                            as: 's',
+                            in: {
+                                $mergeObjects: [
+                                    '$$s',
+                                    {
+                                        skill: {
+                                            $arrayElemAt: [
+                                                {
+                                                    $filter: {
+                                                        input: '$skillsDocs',
+                                                        as: 'sd',
+                                                        cond: { $eq: ['$$sd._id', '$$s.skill'] }
+                                                    }
+                                                },
+                                                0
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            { $project: { skillsDocs: 0 } }
+        );
+
+        // Faceted pagination to get data and total after all filters (including location)
+        pipeline.push(
+            { $sort: sortStage },
+            {
+                $facet: {
+                    data: [
+                        { $skip: (numericPage - 1) * numericLimit },
+                        { $limit: numericLimit },
+                        // Project only necessary user fields
+                        {
+                            $project: {
+                                'user.password': 0,
+                                'user.__v': 0
+                            }
+                        }
+                    ],
+                    total: [ { $count: 'count' } ]
+                }
+            }
+        );
+
+        const aggResult = await FreelancerProfile.aggregate(pipeline);
+        const data = (aggResult[0]?.data || []).map(doc => ({ ...doc }));
+        const total = aggResult[0]?.total?.[0]?.count || 0;
+
+        return res.status(200).json({
+            success: true,
+            data,
+            pagination: {
+                page: numericPage,
+                limit: numericLimit,
+                total,
+                pages: Math.ceil(total / numericLimit)
+            }
+        });
+    } catch (error) {
+        console.error('Search freelancers error:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+};
+
 // Get Freelancer Profile by ID
 exports.getFreelancerProfile = async (req, res) => {
     try {
